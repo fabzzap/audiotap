@@ -106,7 +106,7 @@ CAPTION "About Audiotap"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,48,100,50,14
-    CTEXT           "Audiotap 1.0",IDC_STATIC,7,7,134,8
+    CTEXT           "Audiotap 1.1",IDC_STATIC,7,7,134,8
     CTEXT           "Copyright (C) Fabrizio Gennari 2003",IDC_STATIC,7,18,
                     133,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
