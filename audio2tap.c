@@ -31,7 +31,7 @@ void sig_int(int signum){
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
-  printf("       audio2tap [-f <freq>] [-v vol] [-i] [-k|-o] [-t <output_TAP_file_name> [-0]|-w <output_WAV_file_name>] file [file...]\n");
+  printf("       audio2tap [-f <freq>] [-v vol] [-i] [-k|-o] [-t <output_TAP_file_name> [-0]] [WAV file]\n");
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
@@ -66,10 +66,12 @@ int main(int argc, char** argv){
     {"freq"              ,1,NULL,'f'},
     {"help"              ,0,NULL,'h'},
     {"version"           ,0,NULL,'V'},
+    {"clock"             ,1,NULL,'c'},
     {NULL                ,0,NULL,0}
   };
   char *infile, *outfile;
   int option;
+  int clock=0;
 
   status = audiotap_initialize();
   if (status.audiofile_init_status != LIBRARY_OK &&
@@ -78,8 +80,20 @@ int main(int argc, char** argv){
     exit(1);
   }
   
-  while( (option=getopt_long(argc,argv,"d:H:0ihV",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"d:H:0ihVc:",cmdline,NULL)) != -1){
     switch(option){
+    case 'c':
+      if(!strcmp(optarg,"c64ntsc"))
+        clock=1;
+      else if(!strcmp(optarg,"vicpal"))
+        clock=2;
+      else if(!strcmp(optarg,"vicntsc"))
+        clock=3;
+      else if(!strcmp(optarg,"c16pal"))
+        clock=4;
+      else if(!strcmp(optarg,"c16ntsc"))
+        clock=5;
+      break;
     case 'd':
       min_duration=atoi(optarg);
       break;
@@ -143,7 +157,7 @@ int main(int argc, char** argv){
   }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, min_duration, min_height << 24, inverted, tap_version);
+  audio2tap(infile, outfile, freq, min_duration, min_height << 24, inverted, tap_version,clock);
 
   exit(0);
 }
