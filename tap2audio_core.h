@@ -7,7 +7,6 @@
  * See file LICENSE.TXT for details.
  *
  * tap2audio_core.h : header file for tap2audio_core.c
- * Also implements the callback functions for the core processing part
  * 
  * This file belongs to the tap->audio part
  * This file is part of Audiotap core files

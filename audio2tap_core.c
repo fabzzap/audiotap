@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include "audiotap_callback.h"
 #include "audiotap.h"
+#include "audio2tap_core.h"
 
 static const char c64_machine_string[]="C64-TAPE-RAW";
 static const char c16_machine_string[]="C16-TAPE-RAW";
@@ -36,7 +37,7 @@ void audio2tap(char *infile,
 	      u_int32_t min_height,
 	      int inverted,
 	      unsigned char tap_version,
-		  int clock
+	      int clock
 )
 {
   FILE *fd;

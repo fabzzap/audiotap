@@ -13,6 +13,8 @@
  * This file is part of Audiotap core files
  */
 
+#include "tap_types.h"
+
 void audio2tap_interrupt();
 void audio2tap(char *infile,
 	      char *outfile,
@@ -21,4 +23,4 @@ void audio2tap(char *infile,
 	      u_int32_t min_height,
 	      int inverted,
 	      unsigned char tap_version,
-		  int clock);
+	      int clock);
