@@ -1,0 +1,16 @@
+[OPTIONS]
+Auto Index=Yes
+Binary Index=No
+Compatibility=1.1 or later
+Compiled file=audiotap.chm
+Contents file=Table of Contents.hhc
+Default topic=intro.htm
+Display compile progress=No
+Full-text search=Yes
+Index file=Index.hhk
+Language=0x410 Italiano (standard)
+Title=Audiotap help
+
+
+[INFOTYPES]
+

@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<Title>Tips for creating .TAP files from tapes</Title>
+</HEAD>
+<BODY>
+First of all, it is better to open the Volume Control (double click on the speaker in the
+system tray), then select Options/Properties and choose "Adjust volume for Recording".
+Then, select <i>Line in</i> and unselect everything else. Set the volume of <i>Line in</i>
+to the maximum.
+<p>
+<img src="rec_volume.png" alt="Recording volume window">
+<p>
+If you are recording directly, tune the volume of the tape player so the <i>Volume level</i>
+bar is about 1/2 - 3/4 of the maximum. If it is too close to the maximum the sound will be
+distorted.
+<p>
+<img src="optimal_rec.png" alt="Optimal recording volume">
+<p>
+If you are recording with a wave editor, inspect the waveform after recording. If it is a
+nice and smooth sinusoid, everything should be fine.
+<p>
+<img src="sinusoid.png" alt="Nice sinusoid">
+<p>
+ If it is too close to the extremes,
+try lowering the volume of the tape player.
+<p>
+<img src="too_loud.png" alt="This waveform is too loud">
+<p>
+If there are irregularities in the waveform,
+try to set <i>Minimum height</i> in the advanced options to a value higher than the
+irregularities' height, but lower than the waveform's height. Remember that 255 is the
+maximum height of the waveform.
+</BODY>
+</HTML>

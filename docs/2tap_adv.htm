@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<Title>Advanced options</Title>
+</HEAD>
+<BODY>
+<ul>
+<li><b>Input frequency</b>: Frequency of sound coming from sound card. As long as the frequency
+is supported by the sound card, the higher, the better. 44100 Hz is strongly recommended,
+because it is almost universally supported. This parameter is ignored if the input is an
+audio file: in those cases, frequency will be taken form the file itself.<br>
+<li><b>Minimum duration of a pulse</b>: if this value is <i>n</i>, a maximum must be at
+least <i>n</i> samples after the previous minimum, and vice versa, to be considered valid. Otherwise,
+the maximum and the following minimum (or vice versa) will be ignored. This can help
+reduce the probability of having wrong data coming from noisy tapes. However, if this
+value is too high, real triggers could be ignored.<br>
+<li><b>Minimum height of a pulse</b>: this states how much a maximum must be higher than the
+previous minimum, and vice versa, to be considered valid. Otherwise,
+the maximum and the following minimum (or vice versa) will be ignored. 255 is the
+difference between the absolute maximum and the absolute minimum.
+This can help reduce the probability of having wrong data coming from noisy tapes. However, if this
+value is too high, real triggers could be ignored. Recommended value is about 1/4 - 1/3
+of the difference between maximums and minimums.<br>
+</ul>
+</BODY>
+</HTML>
+
+</ul>
+</BODY>
+</HTML>

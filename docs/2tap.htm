@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Creating TAP files from Commodore 64 tapes</Title>
+</HEAD>
+<BODY>
+Choose <i>Create a TAP file</i>
+<p>
+<img src="2tap.png" alt="Create a TAP file">
+<p>
+<ul>
+<li>Choose <i>from an audio file (WAV or similar)</i> if you sampled the tape to a WAV
+file or another supported audio file format. This option is not available if the file
+<i>audiofile.dll</i> is missing from the directory where <i>audiotap.exe</i> is.
+<li>Choose <i>from a sound</i> if you want to record the sound right away. For this, you
+need to connect the output of a tape player to the sound card input.
+This option is not available if the files
+<i>portaudio.dll</i> and <i>pablio.dll</i> are missing from the directory where
+<i>audiotap.exe</i> is.
+</ul>
+<b>Inverted waveform</b>: some sound cards invert the signal, that is they turn negative values of the
+waveform into positive ones and vice versa. If the input is such a sound card, or a .WAV
+file generated with such a sound card, invalid data will come from the tape and no programs
+will be converted. In these cases, check this box. In general, if the TAP file does not work,
+try toggling this box and start again.<br>
+<a href="2tap_adv.htm">Advanced options</a>
+<p>
+Then press OK. You will be asked to choose the input audio file (in case you choose
+conversion from an audio file) and the output TAP file (you will be able to choose whether
+to create a version 0 or version 1 TAP file). When you've chosen, the conversion starts.
+If the input is a sound, press play on the tape player and press <i>Cancel</i> when you want
+to stop. Otherwise, wait until the end, or press <i>Cancel</i> to stop immediately.
+</BODY>
+</HTML>
