@@ -29,6 +29,28 @@ void sig_int(int signum){
 	audio2tap_interrupt();
 }
 
+void help(){
+  printf("Usage: audio2tap -h|-V\n");
+  printf("       audio2tap [-f <freq>] [-v vol] [-i] [-k|-o] [-t <output_TAP_file_name> [-0]|-w <output_WAV_file_name>] file [file...]\n");
+  printf("Options:\n");
+  printf("\t-h: show this help message and exit successfully\n");
+  printf("\t-V: show version and copyright info and exit successfully\n");
+  printf("\t-i use inverted waveforms\n");
+  printf("\t-d ignore pulses if distance between min and max is less than <min duration> samples\n");
+  printf("\t-H ignore pulses if level difference between min and max is less than <min height> (range 0-255)\n");
+  printf("\t-f use input frequency <freq> Hz, default 44100 (only if input is sound card)\n");
+  printf("\t-0 Generate a TAP file of version 0\n");
+}
+
+void version(){
+  printf("audio2tap (part of Audiotap) version 1.0\n");
+  printf("(C) by Fabrizio Gennari, 2003\n");
+  printf("This program is distributed under the GNU General Public License\n");
+  printf("Read the file LICENSE.TXT for details\n");
+  printf("This product includes software developed by the NetBSD\n");
+  printf("Foundation, Inc. and its contributors\n");
+}
+   
 int main(int argc, char** argv){
   struct audiotap_init_status status;
   unsigned int min_duration = 2;
@@ -38,10 +60,12 @@ int main(int argc, char** argv){
   unsigned char tap_version = 1;
   struct option cmdline[]={
     {"min-duration"      ,1,NULL,'d'},
-    {"min-height"        ,1,NULL,'h'},
+    {"min-height"        ,1,NULL,'H'},
     {"tap-version-0"     ,0,NULL,'0'},
     {"inverted-waveform" ,0,NULL,'i'},
     {"freq"              ,1,NULL,'f'},
+    {"help"              ,0,NULL,'h'},
+    {"version"           ,0,NULL,'V'},
     {NULL                ,0,NULL,0}
   };
   char *infile, *outfile;
@@ -54,12 +78,12 @@ int main(int argc, char** argv){
     exit(1);
   }
   
-  while( (option=getopt_long(argc,argv,"d:h:0i",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"d:H:0ihV",cmdline,NULL)) != -1){
     switch(option){
     case 'd':
       min_duration=atoi(optarg);
       break;
-    case 'h':
+    case 'H':
       min_height=atoi(optarg);
       break;
     case 'f':
@@ -71,8 +95,14 @@ int main(int argc, char** argv){
     case 'i':
       inverted=1;
       break;
+    case 'h':
+      help();
+      exit(0);
+    case 'V':
+      version();
+      exit(0);
     default:
-      printf("Unknown option\n");
+      help();
       exit(1);
     }
   }
