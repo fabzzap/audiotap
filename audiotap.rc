@@ -1,0 +1,129 @@
+/* Audiotap: a program for playing TAP files or converting them to WAV files,
+ * and to convert C64 tapes to TAP files
+ *
+ * Copyright (c) Fabrizio Gennari, 2003
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * audiotap.rc : Windows resources (windows, how they are designed...)
+ * 
+ * This file is shared between the audio->tap part and the tap->audio part
+ * This file is part of the Windows GUI version of Audiotap
+ */
+
+#include "resource.h"
+#include <winuser.h>
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+
+IDD_MAINWINDOW DIALOG DISCARDABLE  0, 0, 186, 146
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+CAPTION "Audiotap"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,125,50,14,WS_GROUP
+    CONTROL         "Convert from a TAP file",IDC_FROM_TAP,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,89,10
+    CONTROL         "Create a TAP file",IDC_TO_TAP,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,7,60,69,10
+    CONTROL         "to a sound",IDC_TO_SOUND,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED | WS_GROUP | WS_TABSTOP,27,19,49,10
+    CONTROL         "to a WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED | WS_TABSTOP,27,33,57,10
+    CONTROL         "Inverted waveform",IDC_FROM_TAP_INVERTED,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,29,48,75,10
+    PUSHBUTTON      "Advanced options",IDC_FROM_TAP_ADVANCED,109,47,70,13,
+                    WS_GROUP
+    CONTROL         "from a sound",IDC_FROM_SOUND,"Button",
+                    BS_AUTORADIOBUTTON | WS_DISABLED | WS_GROUP | WS_TABSTOP,
+                    29,71,57,10
+    CONTROL         "from an audio file (WAV or similar)",IDC_FROM_WAV,
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_TABSTOP,
+                    29,85,121,10
+    CONTROL         "Inverted waveform",IDC_TO_TAP_INVERTED,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,29,
+                    108,75,10
+    PUSHBUTTON      "Advanced options",IDC_TO_TAP_ADVANCED,109,107,70,13,
+                    WS_DISABLED | WS_GROUP
+    PUSHBUTTON      "About",IDC_ABOUT,7,126,45,13
+END
+
+IDD_STATUS DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Audiotap progress status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDC_STOP,70,74,50,14
+    LTEXT           "Origin",IDC_ORIGIN,7,17,172,11
+    LTEXT           "Destination",IDC_DESTINATION,7,29,172,9
+    LTEXT           "Progress indication",IDC_WHAT_PROGRESSBAR_MEANS,7,45,60,
+                    8
+    CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",0x0,7,57,
+                    172,10
+END
+
+IDD_TO_TAP_ADVANCED DIALOG DISCARDABLE  0, 0, 186, 92
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Audio->TAP advanced options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,71,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,71,50,14
+    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_DURATION,147,7,32,12,
+                    ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_HEIGHT,147,30,32,12,
+                    ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TO_TAP_ADVANCED_FREQ,147,52,32,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "Minimum distance between a max and a min (in samples)",
+                    IDC_STATIC,7,7,136,20
+    LTEXT           "Minimum difference in sound level between a maximum and a minimum (1-255)",
+                    IDC_STATIC,7,28,137,21
+    LTEXT           "Input frequency (Hz) (only for conversions from sound card)",
+                    IDC_STATIC,7,49,133,17
+END
+
+IDD_FROM_TAP_ADVANCED DIALOG DISCARDABLE  0, 0, 186, 58
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TAP->audio advanced options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,37,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,37,50,14
+    EDITTEXT        IDC_FROM_TAP_ADVANCED_VOLUME,147,7,32,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    EDITTEXT        IDC_FROM_TAP_ADVANCED_FREQ,147,22,32,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "Volume (1-255)",IDC_STATIC,7,7,137,12
+    LTEXT           "Output frequency (Hz)",IDC_STATIC,7,23,133,11
+END
+
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 148, 121
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "About Audiotap"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,48,100,50,14
+    CTEXT           "Audiotap 1.0",IDC_STATIC,7,7,134,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 2003",IDC_STATIC,7,18,
+                    133,8
+    CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
+                    IDC_STATIC,7,28,134,21
+    RTEXT           "pablio.dll status",IDC_STATIC,7,50,57,8
+    RTEXT           "audiofile.dll status",IDC_STATIC,7,80,57,8
+    LTEXT           "",IDC_AUDIOFILE_STATUS,68,80,73,19
+    LTEXT           "",IDC_PABLIO_STATUS,70,51,71,25
+END
+
+IDD_CHOOSE_TAP_VERSION DIALOG DISCARDABLE  0, 0, 177, 33
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "TAP version",IDC_STATIC,7,11,42,8
+    COMBOBOX        IDC_CHOOSE_TAP_VERSION,63,7,107,32,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDI_ICON ICON DISCARDABLE "audiotap.ico"
