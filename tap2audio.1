@@ -1,0 +1,74 @@
+.TH tap2audio 1 "17th May, 2003"
+.SH NAME
+tap2audio \- convert a .TAP file to a Commodore 64 tape
+.SH SYNOPSIS
+tap2audio -h|-v
+.P
+tap2audio [-i] [-f <freq>] [-v <vol>] input_TAP_file_name [output_WAV_file_name]
+.SH DESCRIPTION
+.I tap2audio
+reads the input .TAP file and converts it to a Commodore 64 tape. The output
+format can be a sound (this is the default) or a .WAV file (if the name of
+a WAV file is specified as second argument)
+Conversion to sound card requires
+.I
+libpablio.so
+and
+\fIlibportaudio.so\fR.
+Conversion to WAV file requires
+.I
+libaudiofile.so
+(version 0.2.3 recommended).
+.SH OPTIONS
+.TP
+.B -f <freq>
+Output waveform will have frequency <freq> Hz.
+.TP
+.B -h
+Show a help message and exit successfully.
+.TP
+.B -i
+Generate an inverted waveform. Some soundcards invert the signal
+when playing back, i.e. they turn positive waveform values into negative ones
+and vice versa. If a normal waveform is played back with such a soundcard, a
+C64 will not be able to recognize it. If an inverted waveform is played back
+with such a soundcard, the soundcard will invert it again, turning it into a
+normal waveform, so a C64 will recognize it. If a waveform generated without the
+.B -i
+option is not loaded by the C64, try enabling this option.
+.TP
+.B
+-v <vol>
+Set volume of output waveform to <vol> (1-255). Ignored if output is a TAP
+file.
+.TP
+.B -V
+Show version and copyright info and exit successfully
+.TP
+.BI \-w " output\_WAV\_file\_name"
+Output is WAV file
+.I
+output\_WAV\_file\_name
+.SH AUTHOR
+Fabrizio Gennari (fabrizio.ge@tiscalinet.it)
+.SH REFERENCES
+.I http://www.computerbrains.com/tapformat.html
+.IP
+Per Hakan Sundell's description of .TAP file format
+.PP
+.I http://www.portaudio.com
+.IP
+PortAudio library home page. \fItap2audio\fR needs it for playing back C64 tapes
+to sound card
+.PP
+.I http://www.68k.org/~michael/audiofile
+.IP
+Audiofile library home page. \fItap2audio\fR needs it for generating C64 tapes
+as WAV files
+.SH SEE ALSO
+.B wav2prg
+(1),
+.B prg2wav
+(1),
+.B audio2tap
+(1)

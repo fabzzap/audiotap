@@ -1,0 +1,91 @@
+.TH audio2tap 1 "17th May, 2003"
+.SH NAME
+audio2tap \- Create .TAP files from Commodore 64 tapes
+.SH SYNOPSIS
+audio2tap -h|-v
+.P
+audio2tap [-i] [-f <freq>] [-d <min duration>] [-H <min height>] [-i] <output TAP file> [input audio or TAP file]
+
+.SH DESCRIPTION
+.I audio2tap
+converts Commodore 64 tapes files to .TAP files.
+The tape can be either converted directly from the sound card (by default) or
+from an audio file (.WAV or similar, if an input file name is
+specified as second argument). Conversion from sound card requires
+.I
+libpablio.so
+and
+\fIlibportaudio.so\fR.
+Conversion from WAV file requires
+.I
+libaudiofile.so
+(version 0.2.3 recommended).
+.P
+.SH OPTIONS
+.TP
+.B -d <min duration>
+When decoding a sound to pulses, pulses which last less that <min duration>
+samples are ignored. This option is useful for noisy sounds, in order to
+avoid false triggers. The default value is 3. This option is ignored if the
+input is a TAP file.
+.TP
+.B -f <freq>
+Sets the sampling frequency of the input sound to <freq> Hz. The default is
+44100. This is only significant if the input is from sound card. If the input
+is from audio file, this option is ignored and the frequency will be read
+from the file itself. If the input is a TAP file, this option is ignored.
+.TP
+.B -h
+Show a help message and exit successfully.
+.TP
+.TP
+.B -H <min height>
+When decoding a sound to pulses, maximums or minimums in the waveform whose
+level is less than <min height> higher than the previous minimum/lower than
+the previous maximum are ignored (the difference between the absolute max and
+the absolute min is 256, therefore <min height> must be in the range 0-255).
+This option is useful for noisy sounds, in order to avoid false triggers. The
+default value is 10. This option is ignored if the input is a TAP file.
+.TP
+.B -i
+Tell
+.I audio2tap
+that the .WAV file or the sound coming from the sound card has an inverted
+waveform. Some soundcards invert the signal when sampling, i.e. they turn
+positive waveform values into negative ones and vice versa. If the .WAV file
+or the sound was generated with such a soundcard,
+.I audio2tap
+must be run with the
+.B -i
+option in order to detect the files. If you get no results without the
+.B -i
+option, try enabling it.
+.TP
+.B -0
+Create a version-0 TAP file. By default, a version-1 TAP file is created.
+.TP
+.B -v
+Show version and copyright info and exit successfully
+.SH AUTHOR
+Fabrizio Gennari (fabrizio.ge@tiscalinet.it)
+.SH REFERENCES
+.I http://www.computerbrains.com/tapformat.html
+.IP
+Per Hakan Sundell's description of .TAP file format
+.PP
+.I http://www.portaudio.com
+.IP
+PortAudio library home page. \fIaudio2tap\fR needs it for reading C64 tapes
+from sound card
+.PP
+.I http://www.68k.org/~michael/audiofile
+.IP
+Audiofile library home page. \fIaudio2tap\fR needs it for reading C64 tapes
+from WAV files
+.SH SEE ALSO
+.B prg2wav
+(1),
+.B wav2prg
+(1),
+.B tap2audio
+(1)
