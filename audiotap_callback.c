@@ -23,12 +23,11 @@
 #include <assert.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdarg.h>
 #ifndef WIN32
-#warning WIndows not defd
 #include <sys/ioctl.h>
 #include <termios.h>
 #else
-#warning WINDOWS defined
 #include <windows.h>
 #endif
 
