@@ -75,7 +75,7 @@ void tap2audio(char *infile,
     
   if(videotype != TAP_VIDEOTYPE_PAL &&
      videotype != TAP_VIDEOTYPE_NTSC){
-    error_message("File %s has unsupported TAP vidoetype %u", infile, videotype);
+    error_message("File %s has unsupported TAP videotype %u", infile, videotype);
     return;
   }
     
