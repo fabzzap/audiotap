@@ -8,7 +8,7 @@
  *
  * audiotap_main.c : main program for Windows version
  * Also implements the callback functions for the core processing part
- * 
+ *
  * This file is shared between the audio->tap part and the tap->audio part
  * This file is part of the Windows GUI version of Audiotap
  */
@@ -93,18 +93,18 @@ void statusbar_initialize(int length)
 void statusbar_exit(void){
 }
 
-BOOL CALLBACK status_window_proc( HWND hwndDlg, 
- // handle to dialog box 
- 
-UINT uMsg, 
- // message 
- 
-WPARAM wParam, 
- // first message parameter 
- 
-LPARAM lParam 
- // second message parameter 
- 
+BOOL CALLBACK status_window_proc( HWND hwndDlg,
+ // handle to dialog box
+
+UINT uMsg,
+ // message
+
+WPARAM wParam,
+ // first message parameter
+
+LPARAM lParam
+ // second message parameter
+
 ){
 	switch (uMsg)
 	{
@@ -118,12 +118,12 @@ LPARAM lParam
 		return 0;
 	}
 
-}; 
- 
-BOOL CALLBACK about_proc(HWND hwnd, // handle of window 
-UINT uMsg, // message identifier 
-WPARAM wParam, // first message parameter 
-LPARAM lParam // second message parameter 
+};
+
+BOOL CALLBACK about_proc(HWND hwnd, // handle of window
+UINT uMsg, // message identifier
+WPARAM wParam, // first message parameter
+LPARAM lParam // second message parameter
 ){
 
 	switch (uMsg)
@@ -181,18 +181,18 @@ struct audiotap_advanced {
 	u_int8_t  volume;
 };
 
-UINT APIENTRY wav_opensave_hook_proc ( HWND hdlg, 
- // handle to child dialog window 
- 
-UINT uiMsg, 
- // message identifier 
- 
-WPARAM wParam, 
- // message parameter 
- 
-LPARAM lParam 
- // message parameter 
- 
+UINT APIENTRY wav_opensave_hook_proc ( HWND hdlg,
+ // handle to child dialog window
+
+UINT uiMsg,
+ // message identifier
+
+WPARAM wParam,
+ // message parameter
+
+LPARAM lParam
+ // message parameter
+
  ){
 	if (uiMsg == WM_NOTIFY){
 		OFNOTIFY *notify = (OFNOTIFY *)lParam;
@@ -210,20 +210,20 @@ LPARAM lParam
 		}
 	}
 	return 0;
-}; 
+};
 
-UINT APIENTRY tap_open_hook_proc ( HWND hdlg, 
- // handle to child dialog window 
- 
-UINT uiMsg, 
- // message identifier 
- 
-WPARAM wParam, 
- // message parameter 
- 
-LPARAM lParam 
- // message parameter 
- 
+UINT APIENTRY tap_open_hook_proc ( HWND hdlg,
+ // handle to child dialog window
+
+UINT uiMsg,
+ // message identifier
+
+WPARAM wParam,
+ // message parameter
+
+LPARAM lParam
+ // message parameter
+
  ){
 	if (uiMsg == WM_NOTIFY){
 		OFNOTIFY *notify = (OFNOTIFY *)lParam;
@@ -241,20 +241,20 @@ LPARAM lParam
 		}
 	}
 	return 0;
-}; 
+};
 
-UINT APIENTRY tap_save_hook_proc ( HWND hdlg, 
- // handle to child dialog window 
- 
-UINT uiMsg, 
- // message identifier 
- 
-WPARAM wParam, 
- // message parameter 
- 
-LPARAM lParam 
- // message parameter 
- 
+UINT APIENTRY tap_save_hook_proc ( HWND hdlg,
+ // handle to child dialog window
+
+UINT uiMsg,
+ // message identifier
+
+WPARAM wParam,
+ // message parameter
+
+LPARAM lParam
+ // message parameter
+
  ){
 	if (uiMsg == WM_INITDIALOG){
 		SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 0");
@@ -283,7 +283,7 @@ LPARAM lParam
 		}
 	}
 	return 0;
-}; 
+};
 
 struct audio2tap_parameters {
 	char *input_filename;
@@ -393,18 +393,18 @@ void save_to_tap(HWND hwnd){
 	status_window = NULL;
 };
 
-BOOL CALLBACK tap2audio_status_window_proc( HWND hwndDlg, 
- // handle to dialog box 
- 
-UINT uMsg, 
- // message 
- 
-WPARAM wParam, 
- // first message parameter 
- 
-LPARAM lParam 
- // second message parameter 
- 
+BOOL CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
+ // handle to dialog box
+
+UINT uMsg,
+ // message
+
+WPARAM wParam,
+ // first message parameter
+
+LPARAM lParam
+ // second message parameter
+
 ){
 	switch (uMsg)
 	{
@@ -416,8 +416,8 @@ LPARAM lParam
 		return 0;
 	}
 
-}; 
- 
+};
+
 struct tap2audio_parameters {
 	char *infile;
 	char *outfile;
@@ -514,10 +514,10 @@ void read_from_tap(HWND hwnd){
 	status_window = NULL;
 }
 
-BOOL CALLBACK to_tap_advanced_proc(HWND hwnd, // handle of window 
-UINT uMsg, // message identifier 
-WPARAM wParam, // first message parameter 
-LPARAM lParam // second message parameter 
+BOOL CALLBACK to_tap_advanced_proc(HWND hwnd, // handle of window
+UINT uMsg, // message identifier
+WPARAM wParam, // first message parameter
+LPARAM lParam // second message parameter
 ){
 
 	switch (uMsg)
@@ -525,7 +525,7 @@ LPARAM lParam // second message parameter
 	case WM_INITDIALOG:
 		{
 			struct audiotap_advanced *adv = (struct audiotap_advanced *)lParam;
-			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ        ,adv->infreq        ,FALSE);
+			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ        ,adv->infreq      ,FALSE);
 			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_HEIGHT  ,adv->min_height  ,FALSE);
 			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_DURATION,adv->min_duration,FALSE);
 			return 1;
@@ -551,10 +551,10 @@ LPARAM lParam // second message parameter
 	}
 }
 
-BOOL CALLBACK from_tap_advanced_proc(HWND hwnd, // handle of window 
-UINT uMsg, // message identifier 
-WPARAM wParam, // first message parameter 
-LPARAM lParam // second message parameter 
+BOOL CALLBACK from_tap_advanced_proc(HWND hwnd, // handle of window
+UINT uMsg, // message identifier
+WPARAM wParam, // first message parameter
+LPARAM lParam // second message parameter
 ){
 
 	switch (uMsg)
@@ -585,14 +585,29 @@ LPARAM lParam // second message parameter
 	}
 }
 
-BOOL CALLBACK dialog_control(HWND hwnd, // handle of window 
-UINT uMsg, // message identifier 
-WPARAM wParam, // first message parameter 
-LPARAM lParam // second message parameter 
+BOOL CALLBACK dialog_control(HWND hwnd, // handle of window
+UINT uMsg, // message identifier
+WPARAM wParam, // first message parameter
+LPARAM lParam // second message parameter
 ){
 	switch (uMsg)
 	{
 	case WM_INITDIALOG:
+		{
+			RECT desktop_rect, main_window_rect;
+			BOOL retval1, retval2;
+			retval1=GetWindowRect(GetDesktopWindow(), &desktop_rect    );
+			retval2=GetWindowRect(hwnd,               &main_window_rect);
+			if (retval1 && retval2){
+				SetWindowPos(hwnd, 0,
+					(desktop_rect.right -main_window_rect.right )/2,
+					(desktop_rect.bottom-main_window_rect.bottom)/2,
+					0,0,
+					SWP_NOSIZE | SWP_NOZORDER);
+			}
+		}
+		SetWindowLong(hwnd, GWL_USERDATA, lParam);
+
 		CheckRadioButton(hwnd,IDC_FROM_TAP,IDC_TO_TAP,IDC_FROM_TAP);
 		if (audiotap_status.pablio_init_status == LIBRARY_OK){
 			CheckRadioButton(hwnd,IDC_TO_SOUND,IDC_TO_WAV,IDC_TO_SOUND);
@@ -665,10 +680,6 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			LPSTR lpCmdLine, int nCmdShow ){
-	HWND hwnd;
-	MSG msg;
-	RECT desktop_rect, main_window_rect;
-	BOOL retval1, retval2;
 	struct audiotap_advanced adv = {44100, 3, 10, 1, 44100, 254};
 
 	instance = hInstance;
@@ -680,26 +691,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		return 0;
 	}
 
-	hwnd=CreateDialog(hInstance,MAKEINTRESOURCE(IDD_MAINWINDOW),NULL,dialog_control);
-	retval1=GetWindowRect(GetDesktopWindow(), &desktop_rect    );
-	retval2=GetWindowRect(hwnd,               &main_window_rect);
-	if (retval1 && retval2){
-		SetWindowPos(hwnd, 0,
-			(desktop_rect.right -main_window_rect.right )/2,
-			(desktop_rect.bottom-main_window_rect.bottom)/2,
-			0,0,
-			SWP_NOSIZE | SWP_NOZORDER);
-	}
- 
-
-	ShowWindow(hwnd,nCmdShow);
-	UpdateWindow(hwnd);
-	SetWindowLong(hwnd,GWL_USERDATA , (long)&adv);
-	while (GetMessage (&msg, 0, 0, 0))
-	{
-		TranslateMessage (&msg);
-		DispatchMessage (&msg);
-	}
-
-	return msg.wParam;
+	return DialogBoxParam(hInstance,MAKEINTRESOURCE(IDD_MAINWINDOW),NULL,dialog_control,(LPARAM)&adv);
 }
