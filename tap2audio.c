@@ -38,7 +38,7 @@ void help(){
 
 void version(){
   printf("tap2audio (part of Audiotap) version 1.3\n");
-  printf("(C) by Fabrizio Gennari, 2003\n");
+  printf("(C) by Fabrizio Gennari, 2003-2005\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
