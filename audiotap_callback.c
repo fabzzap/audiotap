@@ -1,65 +1,36 @@
 /* Audiotap: a program for playing TAP files or converting them to WAV files,
  * and to convert C64 tapes to TAP files
  *
- * Copyright (c) Fabrizio Gennari, 2003
+ * Copyright (c) Fabrizio Gennari, 2003-2005
  *
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
  * audiotap_callback.c : function called by the core processing to
  * notify the user about progress/info/errors...
- * 
- * The progress bar functions are based on code used by scp and sftp,
- * parts of the OpenSSH suite. Copyright notice for such code follows:
- * 
- * Copyright (c) 1997-2003 The NetBSD Foundation, Inc.
- * All rights reserved.
  *
- * This code is derived from software contributed to The NetBSD Foundation
- * by Luke Mewburn.
- *
- * This code is derived from software contributed to The NetBSD Foundation
- * by Jason R. Thorpe of the Numerical Aerospace Simulation Facility,
- * NASA Ames Research Center.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *  This product includes software developed by the NetBSD
- *  Foundation, Inc. and its contributors.
- * 4. Neither the name of The NetBSD Foundation nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE 
-
  * This file is shared between the audio->tap part and the tap->audio part
  * This file is part of the command-line version of Audiotap
+ *
+ * Based on implementation of "bar" progress bar of GNU Wget,
+ * Copyright (C) 2001, 2002 Free Software Foundation, Inc.
  */
 
+
 #include <stdio.h>
-#include <unistd.h>
-#include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <assert.h>
+#include <unistd.h>
+#include <signal.h>
+#ifndef WIN32
+#warning WIndows not defd
 #include <sys/ioctl.h>
+#include <termios.h>
+#else
+#warning WINDOWS defined
+#include <windows.h>
+#endif
 
 void warning_message(const char *format,...){
   char string[80];
@@ -81,79 +52,305 @@ void error_message(const char *format,...){
   va_end(va);
 }
 
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#define MIN(a,b) ((a)<(b)?(a):(b))
+/* "Thermometer" (bar) progress. */
 
-int statusbar_length = 0;
+/* Assumed screen width if we can't find the real value.  */
+#define DEFAULT_SCREEN_WIDTH 80
 
-static int
-foregroundproc(void)
+/* Minimum screen width we'll try to work with.  If this is too small,
+   create_image will overflow the buffer.  */
+#define MINIMUM_SCREEN_WIDTH 45
+
+/* The last known screen width.  This can be updated by the code that
+   detects that SIGWINCH was received (but it's never updated from the
+   signal handler).  */
+static int screen_width;
+
+/* A flag that, when set, means SIGWINCH was received.  */
+static volatile int received_sigwinch;
+
+/* Size of the download speed history ring. */
+#define DLSPEED_HISTORY_SIZE 20
+
+/* The minimum time length of a history sample.  By default, each
+   sample is at least 150ms long, which means that, over the course of
+   20 samples, "current" download speed spans at least 3s into the
+   past.  */
+#define DLSPEED_SAMPLE_MIN 150
+
+/* The time after which the download starts to be considered
+   "stalled", i.e. the current bandwidth is not printed and the recent
+   download speeds are scratched.  */
+#define STALL_START_TIME 5000
+
+struct bar_progress {
+  long initial_length;		/* how many bytes have been downloaded
+				   previously. */
+  long total_length;		/* expected total byte count when the
+				   download finishes */
+  long count;			/* bytes downloaded so far */
+
+  int width;			/* screen width we're using at the
+				   time the progress gauge was
+				   created.  this is different from
+				   the screen_width global variable in
+				   that the latter can be changed by a
+				   signal. */
+  char *buffer;			/* buffer where the bar "image" is
+				   stored. */
+  int tick;			/* counter used for drawing the
+				   progress bar where the total size
+				   is not known. */
+};
+
+static struct bar_progress the_bar;
+static struct bar_progress *bp=&the_bar;
+
+static void create_image  (struct bar_progress *bp);
+static void display_image (char * buffer);
+
+/* Determine the width of the terminal we're running on.  If that's
+   not possible, return 0.  */
+
+static
+int
+determine_screen_width (void)
 {
-        static pid_t pgrp = -1;
-        int ctty_pgrp;
+  /* If there's a way to get the terminal size using POSIX
+     tcgetattr(), somebody please tell me.  */
+#ifdef TIOCGWINSZ
+  int fd;
+  struct winsize wsz;
 
-        if (pgrp == -1)
-                pgrp = getpgrp();
+  fd = fileno (stdout);
+  if (ioctl (fd, TIOCGWINSZ, &wsz) < 0)
+    return 0;			/* most likely ENOTTY */
 
-        return ((ctty_pgrp = tcgetpgrp(STDOUT_FILENO)) != -1 &&
-                ctty_pgrp == pgrp);
-
+  return wsz.ws_col;
+#else  /* not TIOCGWINSZ */
+# ifdef WIN32
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  if (!GetConsoleScreenBufferInfo (GetStdHandle (STD_ERROR_HANDLE), &csbi))
+    return 0;
+  return csbi.dwSize.X;
+# else /* neither WINDOWS nor TIOCGWINSZ */
+  return 0;
+#endif /* neither WINDOWS nor TIOCGWINSZ */
+#endif /* not TIOCGWINSZ */
 }
 
-static int
-getttywidth(void)
-{
-#ifdef TIOCGWINSIZE
-        struct winsize winsize;
-        if (ioctl(fileno(stdout), TIOCGWINSZ, &winsize) != -1)
-                return (winsize.ws_col ? winsize.ws_col : 80);
-        else
-#endif
-                return (80);
-}
+static void
+progress_handle_sigwinch (int sig);
 
 void
 statusbar_update(int cursize)
 {
-        int ratio, barlength, i;
-        char buf[512];
+  bp->count = cursize;
+  if (bp->total_length > 0
+      && bp->count + bp->initial_length > bp->total_length)
+    /* We could be downloading more than total_length, e.g. when the
+       server sends an incorrect Content-Length header.  In that case,
+       adjust bp->total_length to the new reality, so that the code in
+       create_image() that depends on total size being smaller or
+       equal to the expected size doesn't abort.  */
+    bp->total_length = bp->initial_length + bp->count;
 
-        if (foregroundproc() == 0)
-                return;
+  /* If SIGWINCH (the window size change signal) been received,
+     determine the new screen size and update the screen.  */
+  if (received_sigwinch)
+    {
+      int old_width = screen_width;
+      screen_width = determine_screen_width ();
+      if (!screen_width)
+	screen_width = DEFAULT_SCREEN_WIDTH;
+      else if (screen_width < MINIMUM_SCREEN_WIDTH)
+	screen_width = MINIMUM_SCREEN_WIDTH;
+      if (screen_width != old_width)
+	{
+	  bp->width = screen_width - 1;
+	  bp->buffer = realloc (bp->buffer, bp->width + 1);
+	}
+      received_sigwinch = 0;
+    }
 
-        if (statusbar_length != 0) {
-                ratio = 100.0 * cursize / statusbar_length;
-                ratio = MAX(ratio, 0);
-                ratio = MIN(ratio, 100);
-        } else
-                ratio = 100;
-
-        snprintf(buf, sizeof(buf), "\r%3d%% ", ratio);
-
-        barlength = getttywidth() - 8;
-        if (barlength > 0) {
-                i = barlength * ratio / 100;
-                snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-                    "|%.*s%*s|", i,
-                    "*******************************************************"
-                    "*******************************************************"
-                    "*******************************************************"
-                    "*******************************************************"
-                    "*******************************************************"
-                    "*******************************************************"
-                    "*******************************************************",
-                    barlength - i, "");
-        }
-        i = 0;
-
-        write(fileno(stdout), buf, strlen(buf));
+  create_image (bp);
+  display_image (bp->buffer);
 }
 
 void statusbar_initialize(int length){
-  statusbar_length=length;
-  statusbar_update(0);
+#ifdef SIGWINCH
+  signal(SIGWINCH, progress_handle_sigwinch);
+#endif
+
+  bp->initial_length = 0;
+  bp->count          = 0;
+  bp->total_length   = length;
+
+  /* Initialize screen_width if this hasn't been done or if it might
+     have changed, as indicated by receiving SIGWINCH.  */
+  if (!screen_width || received_sigwinch)
+    {
+      screen_width = determine_screen_width ();
+      if (!screen_width)
+	screen_width = DEFAULT_SCREEN_WIDTH;
+      else if (screen_width < MINIMUM_SCREEN_WIDTH)
+	screen_width = MINIMUM_SCREEN_WIDTH;
+      received_sigwinch = 0;
+    }
+
+  /* - 1 because we don't want to use the last screen column. */
+  bp->width = screen_width - 1;
+  /* + 1 for the terminating zero. */
+  bp->buffer = malloc (bp->width + 1);
+
+  create_image (bp);
+  display_image (bp->buffer);
 }
 
 void statusbar_exit(void){
-  write(fileno(stdout),"\n",1);
+	if (isatty (fileno (stdout)))
+		fputs("\n",stdout);
+    free(bp->buffer);
+    bp->buffer = NULL;
 }
+
+#define APPEND_LITERAL(s) do {			\
+  memcpy (p, s, sizeof (s) - 1);		\
+  p += sizeof (s) - 1;				\
+} while (0)
+
+#ifndef MAX
+# define MAX(a, b) ((a) >= (b) ? (a) : (b))
+#endif
+
+static void
+create_image (struct bar_progress *bp)
+{
+  char *p = bp->buffer;
+  long size = bp->initial_length + bp->count;
+
+  /* The progress bar should look like this:
+     xx% [=======>             ] nnnnn
+
+     Calculate the geometry.  The idea is to assign as much room as
+     possible to the progress bar.  The other idea is to never let
+     things "jitter", i.e. pad elements that vary in size so that
+     their variance does not affect the placement of other elements.
+     It would be especially bad for the progress bar to be resized
+     randomly.
+
+     "xx% " or "100%"  - percentage               - 4 chars
+     "[]"              - progress bar decorations - 2 chars
+
+     "=====>..."       - progress bar             - the rest
+  */
+  int progress_size = bp->width - (4 + 2);
+
+  if (progress_size < 5)
+    progress_size = 0;
+
+  /* "xx% " */
+  if (bp->total_length > 0)
+    {
+      int percentage = (int)(100.0 * size / bp->total_length);
+
+      assert (percentage <= 100);
+
+      if (percentage < 100)
+	sprintf (p, "%2d%% ", percentage);
+      else
+	strcpy (p, "100%");
+      p += 4;
+    }
+  else
+    APPEND_LITERAL ("    ");
+
+  /* The progress bar: "[====>      ]" or "[++==>      ]". */
+  if (progress_size && bp->total_length > 0)
+    {
+      /* Size of the initial portion. */
+      int insz = (double)bp->initial_length / bp->total_length * progress_size;
+
+      /* Size of the downloaded portion. */
+      int dlsz = (double)size / bp->total_length * progress_size;
+
+      char *begin;
+      int i;
+
+      assert (dlsz <= progress_size);
+      assert (insz <= dlsz);
+
+      *p++ = '[';
+      begin = p;
+
+      /* Print the initial portion of the download with '+' chars, the
+	 rest with '=' and one '>'.  */
+      for (i = 0; i < insz; i++)
+	*p++ = '+';
+      dlsz -= insz;
+      if (dlsz > 0)
+	{
+	  for (i = 0; i < dlsz - 1; i++)
+	    *p++ = '=';
+	  *p++ = '>';
+	}
+
+      while (p - begin < progress_size)
+	*p++ = ' ';
+      *p++ = ']';
+    }
+  else if (progress_size)
+    {
+      /* If we can't draw a real progress bar, then at least show
+	 *something* to the user.  */
+      int ind = bp->tick % (progress_size * 2 - 6);
+      int i, pos;
+
+      /* Make the star move in two directions. */
+      if (ind < progress_size - 2)
+	pos = ind + 1;
+      else
+	pos = progress_size - (ind - progress_size + 5);
+
+      *p++ = '[';
+      for (i = 0; i < progress_size; i++)
+	{
+	  if      (i == pos - 1) *p++ = '<';
+	  else if (i == pos    ) *p++ = '=';
+	  else if (i == pos + 1) *p++ = '>';
+	  else
+	    *p++ = ' ';
+	}
+      *p++ = ']';
+
+      ++bp->tick;
+    }
+
+  assert (p - bp->buffer <= bp->width);
+
+  while (p < bp->buffer + bp->width)
+    *p++ = ' ';
+  *p = '\0';
+}
+
+/* Print the contents of the buffer as a one-line ASCII "image" so
+   that it can be overwritten next time.  */
+
+static void
+display_image (char *buf)
+{
+  if (!isatty (fileno (stdout)))
+    return;
+  fputs ("\r", stdout);
+  fputs (buf, stdout);
+  fflush (stdout);
+}
+
+#ifdef SIGWINCH
+static void
+progress_handle_sigwinch (int sig)
+{
+  received_sigwinch = 1;
+  signal (SIGWINCH, progress_handle_sigwinch);
+}
+#endif
