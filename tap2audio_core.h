@@ -6,7 +6,7 @@
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
- * audio2tap_core.h : header file for audio2tap_core.c
+ * tap2audio_core.h : header file for tap2audio_core.c
  * Also implements the callback functions for the core processing part
  * 
  * This file belongs to the tap->audio part
