@@ -24,6 +24,27 @@ void sig_int(int signum){
 	tap2audio_interrupt();
 }
 
+void help(){
+  printf("Usage: tap2audio -h|-V\n");
+  printf("       tap2audio [-f <freq>] [-v vol] [-i] <input TAP file> [output WAV file]\n");
+  printf("Options:\n");
+  printf("\t-h: show this help message and exit successfully\n");
+  printf("\t-V: show version and copyright info and exit successfully\n");
+  printf("\t-i use inverted waveforms\n");
+  printf("\t-f use output frequency <freq> Hz, default 44100\n");
+  printf("\t-v volume of the output sound (0-255, default 254)\n");
+  printf("If no output WAV file is specified, output is sound card\n");
+}
+
+void version(){
+  printf("tap2audio (part of Audiotap) version 1.0\n");
+  printf("(C) by Fabrizio Gennari, 2003\n");
+  printf("This program is distributed under the GNU General Public License\n");
+  printf("Read the file LICENSE.TXT for details\n");
+  printf("This product includes software developed by the NetBSD\n");
+  printf("Foundation, Inc. and its contributors\n");
+}
+   
 int main(int argc, char** argv){
   int inverted = 0;
   int volume = 254;
@@ -32,6 +53,8 @@ int main(int argc, char** argv){
     {"volume"            ,1,NULL,'v'},
     {"frequency"         ,1,NULL,'f'},
     {"inverted-waveform" ,0,NULL,'i'},
+    {"help"              ,0,NULL,'h'},
+    {"version"           ,0,NULL,'V'},
     {NULL                ,0,NULL,0}
   };
   int option;
@@ -44,7 +67,7 @@ int main(int argc, char** argv){
     exit(1);
   }
 
-  while( (option=getopt_long(argc,argv,"d:h:0i",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"v:f:ihV",cmdline,NULL)) != -1){
     switch(option){
     case 'v':
       if (atoi(optarg) < 1 || atoi(optarg) > 255){
@@ -59,7 +82,14 @@ int main(int argc, char** argv){
     case 'i':
       inverted=1;
       break;
+    case 'h':
+      help();
+      exit(0);
+    case 'V':
+      version();
+      exit(0);
     default:
+      help();
       exit(1);
     }
   }
