@@ -1,3 +1,5 @@
+all: audiotap.exe
+
 audiotap-resources.o: audiotap.rc
 	windres -o $@ $^
 
