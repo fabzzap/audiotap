@@ -19,9 +19,7 @@
 #define IDD_TO_TAP_ADVANCED             105
 #define IDD_FROM_TAP_ADVANCED           106
 #define IDD_ABOUT                       107
-#define IDC_RADIO1                      1000
 #define IDC_FROM_TAP                    1000
-#define IDC_RADIO2                      1001
 #define IDC_TO_TAP                      1001
 #define IDC_TO_SOUND                    1002
 #define IDC_TO_WAV                      1003
@@ -45,3 +43,5 @@
 #define IDC_TO_TAP_ADVANCED_FREQ        1020
 #define IDC_PABLIO_STATUS               1020
 #define IDC_AUDIOFILE_STATUS            1021
+#define IDC_CLOCKS                      1022
+#define IDC_STATIC                      -1

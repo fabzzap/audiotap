@@ -19,21 +19,8 @@
 #include <stdarg.h>
 #include "resource.h"
 #include "audiotap.h"
-
-extern void audio2tap(char *infile,
-	      char *outfile,
-	      u_int32_t freq,
-	      u_int32_t min_duration,
-	      u_int32_t min_height,
-	      int inverted,
-	      unsigned char tap_version);
-extern void audio2tap_interrupt();
-extern void tap2audio(char *infile,
-	      char *outfile,
-	      int inverted,
-	      int32_t volume,
-	      int freq);
-extern void tap2audio_interrupt(void);
+#include "tap2audio_core.h"
+#include "audio2tap_core.h"
 
 struct audiotap_init_status audiotap_status;
 HINSTANCE instance;
@@ -179,6 +166,7 @@ struct audiotap_advanced {
 	long      tap_version;
 	u_int32_t outfreq;
 	u_int8_t  volume;
+	int       clock;
 };
 
 UINT APIENTRY wav_opensave_hook_proc ( HWND hdlg,
@@ -293,6 +281,7 @@ struct audio2tap_parameters {
 	u_int32_t min_height;
 	int inverted;
 	unsigned char tap_version;
+	int clock;
 };
 
 DWORD WINAPI audio2tap_thread(LPVOID params){
@@ -302,7 +291,8 @@ DWORD WINAPI audio2tap_thread(LPVOID params){
 		((struct audio2tap_parameters*)params)->min_duration,
 		((struct audio2tap_parameters*)params)->min_height,
 		((struct audio2tap_parameters*)params)->inverted,
-		((struct audio2tap_parameters*)params)->tap_version);
+		((struct audio2tap_parameters*)params)->tap_version,
+		((struct audio2tap_parameters*)params)->clock);
 	return 0;
 }
 
@@ -373,6 +363,7 @@ void save_to_tap(HWND hwnd){
 	params.freq = (adv != NULL ? adv->infreq : 44100);
 	params.inverted = IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED;
 	params.tap_version = (adv != NULL ? (unsigned char)adv->tap_version : 1);
+	params.clock = (adv != NULL ? adv->clock : 0);
 
 	thread=CreateThread(NULL, 0, audio2tap_thread, &params, 0, &thread_id);
 
@@ -528,6 +519,13 @@ LPARAM lParam // second message parameter
 			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ        ,adv->infreq      ,FALSE);
 			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_HEIGHT  ,adv->min_height  ,FALSE);
 			SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_DURATION,adv->min_duration,FALSE);
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C64 PAL");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C64 NTSC");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20 PAL");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20 NTSC");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16 PAL");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16 NTSC");
+			SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,adv->clock,0);
 			return 1;
 		}
 	case WM_COMMAND:
@@ -541,6 +539,9 @@ LPARAM lParam // second message parameter
 			adv->infreq         = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ          ,&success,FALSE);
 			if (!success) adv->infreq = 44100;
 			if (adv->min_height < 1) adv->min_height = 1;
+			adv->clock=SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_GETCURSEL,0,0);
+			if (adv->clock==CB_ERR || adv->clock<0 || adv->clock>5)
+				adv->clock=0;
 			EndDialog(hwnd,0);
 		}
 		if (LOWORD(wParam) == IDCANCEL){
@@ -680,7 +681,7 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			LPSTR lpCmdLine, int nCmdShow ){
-	struct audiotap_advanced adv = {44100, 3, 10, 1, 44100, 254};
+	struct audiotap_advanced adv = {44100, 3, 10, 1, 44100, 254, 0};
 
 	instance = hInstance;
 	audiotap_status = audiotap_initialize();

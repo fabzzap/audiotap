@@ -35,7 +35,9 @@ void audio2tap(char *infile,
 	      u_int32_t min_duration,
 	      u_int32_t min_height,
 	      int inverted,
-	      unsigned char tap_version)
+	      unsigned char tap_version,
+		  int clock
+)
 {
   FILE *fd;
   enum audiotap_status ret;
@@ -45,10 +47,39 @@ void audio2tap(char *infile,
   unsigned int datalen = 0, old_datalen_div_10000 = 0;
   int totlen, currlen;
   int32_t currloudness;
+  u_int8_t machine;
+  u_int8_t videotype;
 
   if (tap_version > 1){
     error_message("TAP version %u is unsupported", infile);
     return;
+  }
+
+  switch(clock){
+default:
+	machine=TAP_MACHINE_C64;
+	videotype=TAP_VIDEOTYPE_PAL;
+	break;
+case 1:
+	machine=TAP_MACHINE_C64;
+	videotype=TAP_VIDEOTYPE_NTSC;
+	break;
+case 2:
+	machine=TAP_MACHINE_VIC;
+	videotype=TAP_VIDEOTYPE_PAL;
+	break;
+case 3:
+	machine=TAP_MACHINE_VIC;
+	videotype=TAP_VIDEOTYPE_NTSC;
+	break;
+case 4:
+	machine=TAP_MACHINE_C16;
+	videotype=TAP_VIDEOTYPE_PAL;
+	break;
+case 5:
+	machine=TAP_MACHINE_C16;
+	videotype=TAP_VIDEOTYPE_NTSC;
+	break;
   }
 
   if(audio2tap_open(&audiotap, infile, freq, min_duration, min_height, inverted) != AUDIOTAP_OK){
@@ -59,7 +90,13 @@ void audio2tap(char *infile,
     return;
   }
 
-  machine_string=c64_machine_string;
+  if(audio2tap_set_machine(audiotap,machine,videotype)!=AUDIOTAP_OK){
+      error_message("Could not set machine and video type");
+	  audio2tap_close(audiotap);
+	  return;
+  }
+
+  machine_string=(machine!=TAP_MACHINE_C16?c64_machine_string:c16_machine_string);
 
   fd=fopen(outfile, "wb");
   if (fd == NULL){
@@ -74,7 +111,9 @@ void audio2tap(char *infile,
   }
 
   buffer[0]=tap_version;
-  buffer[1]=buffer[2]=buffer[3]=0;
+  buffer[1]=machine;
+  buffer[2]=videotype;
+  buffer[3]=0;
   if (fwrite(buffer, 4, 1, fd) != 1){
     error_message("Cannot write to file %s: %s", outfile, strerror(errno));
     goto err;

@@ -13,10 +13,12 @@
  * This file is part of Audiotap core files
  */
 
+void audio2tap_interrupt();
 void audio2tap(char *infile,
 	      char *outfile,
 	      u_int32_t freq,
 	      u_int32_t min_duration,
 	      u_int32_t min_height,
 	      int inverted,
-	      unsigned char tap_version);
+	      unsigned char tap_version,
+		  int clock);
