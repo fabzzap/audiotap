@@ -7,7 +7,7 @@
  * See file LICENSE.TXT for details.
  *
  * audio2tap_core.c : main audio->tap processing
- * 
+ *
  * This file belongs to the audio->tap part
  * This file is part of Audiotap core processing files
  */
@@ -39,7 +39,7 @@ void audio2tap(char *infile,
 {
   FILE *fd;
   enum audiotap_status ret;
-  struct tap_pulse pulse;
+  u_int32_t pulse;
   const char *machine_string;
   char buffer[4];
   unsigned int datalen = 0, old_datalen_div_10000 = 0;
@@ -108,20 +108,45 @@ void audio2tap(char *infile,
     ret=audio2tap_get_pulse(audiotap, &pulse);
     if (ret!=AUDIOTAP_OK) break;
 
-    if (pulse.version_0!=0 || tap_version == 0){
-      if (fwrite(&pulse.version_0, 1, 1, fd) != 1){
-	error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-	goto err;
-      }
-      datalen+=1;
-    }
-    else{
-      if (fwrite(&pulse.version_1, 4, 1, fd) != 1){
-	error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-	goto err;
-      }
-      datalen+=4;
-    }
+	while (pulse > 0){
+		if (pulse >=256*8){
+			if (tap_version == 0){
+				const u_int8_t zero=0;
+
+				if (fwrite(&zero, 1, 1, fd) != 1){
+					error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+					goto err;
+				}
+				datalen+=1;
+				pulse-=256*8;
+			}
+			else{
+				u_int8_t fourbytes[4];
+
+				fourbytes[0]=0;
+				fourbytes[1]= pulse        & 0xFF;
+				fourbytes[2]=(pulse >>  8) & 0xFF;
+				fourbytes[3]=(pulse >> 16) & 0xFF;
+
+				if (fwrite(fourbytes, 4, 1, fd) != 1){
+					error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+					goto err;
+				}
+				datalen+=4;
+				break;
+			}
+		}
+		else{
+			u_int8_t byte=pulse/8;
+
+			if (fwrite(&byte, 1, 1, fd) != 1){
+				error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+				goto err;
+			}
+			datalen+=1;
+			break;
+		}
+	}
   }
   currlen = audio2tap_get_current_pos(audiotap);
   if (currlen != -1)
@@ -136,7 +161,7 @@ void audio2tap(char *infile,
   if(fseek(fd, 16, SEEK_SET) == -1)
     warning_message("Cannot seek in file %s, len field will be incorrect");
   else{
-    buffer[0]= datalen    &0xff;
+    buffer[0]= datalen     &0xff;
     buffer[1]=(datalen>> 8)&0xff;
     buffer[2]=(datalen>>16)&0xff;
     buffer[3]=(datalen>>24)&0xff;
