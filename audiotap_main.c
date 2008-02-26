@@ -624,46 +624,62 @@ LPARAM lParam // second message parameter
 		}
 		return TRUE;
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDC_FROM_TAP){
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_INVERTED), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_WAV), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_ADVANCED), TRUE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_INVERTED), TRUE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
-		}
-		if (LOWORD(wParam) == IDC_TO_TAP){
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_ADVANCED), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_INVERTED), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), FALSE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), TRUE);
-			EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_INVERTED), TRUE);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
-			EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
-		}
-		if (LOWORD(wParam) == IDOK){
-			if (IsDlgButtonChecked(hwnd, IDC_TO_TAP))
-				save_to_tap(hwnd);
-			else
-				read_from_tap(hwnd);
-		}
-		if (LOWORD(wParam) == IDC_TO_TAP_ADVANCED){
-			struct audiotap_advanced adv;
-			memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
-			DialogBoxParam(instance, MAKEINTRESOURCE(IDD_TO_TAP_ADVANCED), hwnd, to_tap_advanced_proc, (LPARAM)&adv);
-		}
-		if (LOWORD(wParam) == IDC_FROM_TAP_ADVANCED){
-			struct audiotap_advanced adv;
-			memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
-			DialogBoxParam(instance, MAKEINTRESOURCE(IDD_FROM_TAP_ADVANCED), hwnd, from_tap_advanced_proc, (LPARAM)&adv);
-		}
-		if (LOWORD(wParam) == IDC_ABOUT){
-			DialogBox(instance, MAKEINTRESOURCE(IDD_ABOUT), hwnd, about_proc);
-		}
-    return TRUE;
+    switch(LOWORD(wParam))
+    {
+    case IDC_FROM_TAP:
+      {
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_INVERTED), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_WAV), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_ADVANCED), TRUE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_INVERTED), TRUE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
+        return TRUE;
+      }
+    case IDC_TO_TAP:
+      {
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_ADVANCED), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_INVERTED), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), FALSE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), TRUE);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_INVERTED), TRUE);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
+        return TRUE;
+      }
+    case IDOK:
+      {
+        if (IsDlgButtonChecked(hwnd, IDC_TO_TAP))
+          save_to_tap(hwnd);
+        else
+          read_from_tap(hwnd);
+        return TRUE;
+      }
+    case IDC_TO_TAP_ADVANCED:
+      {
+        struct audiotap_advanced adv;
+        memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
+        DialogBoxParam(instance, MAKEINTRESOURCE(IDD_TO_TAP_ADVANCED), hwnd, to_tap_advanced_proc, (LPARAM)&adv);
+        return TRUE;
+      }
+    case IDC_FROM_TAP_ADVANCED:
+      {
+        struct audiotap_advanced adv;
+        memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
+        DialogBoxParam(instance, MAKEINTRESOURCE(IDD_FROM_TAP_ADVANCED), hwnd, from_tap_advanced_proc, (LPARAM)&adv);
+        return TRUE;
+      }
+    case IDC_ABOUT:
+      {
+        DialogBox(instance, MAKEINTRESOURCE(IDD_ABOUT), hwnd, about_proc);
+        return TRUE;
+      }
+    default:
+      return FALSE;
+    }
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
 		return TRUE;
