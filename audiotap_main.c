@@ -33,7 +33,7 @@ void warning_message(const char *format,...){
   va_start(va, format);
     if (_vsnprintf(string, 160, format, va) == -1)
 	  string[159]=0;
-  MessageBox(0, string, "Audiotap warning", MB_ICONWARNING | MB_SETFOREGROUND);
+  MessageBoxA(0, string, "Audiotap warning", MB_ICONWARNING | MB_SETFOREGROUND);
   va_end(va);
 }
 
@@ -44,7 +44,7 @@ void error_message(const char *format,...){
   va_start(va, format);
   if (_vsnprintf(string, 160, format, va) == -1)
 	  string[159]=0;
-  MessageBox(0, string, "Audiotap error", MB_ICONERROR | MB_SETFOREGROUND);
+  MessageBoxA(0, string, "Audiotap error", MB_ICONERROR | MB_SETFOREGROUND);
   va_end(va);
 }
 
@@ -80,7 +80,7 @@ void statusbar_initialize(int length)
 void statusbar_exit(void){
 }
 
-BOOL CALLBACK status_window_proc( HWND hwndDlg,
+INT_PTR CALLBACK status_window_proc( HWND hwndDlg,
  // handle to dialog box
 
 UINT uMsg,
@@ -107,7 +107,7 @@ LPARAM lParam
 
 };
 
-BOOL CALLBACK about_proc(HWND hwnd, // handle of window
+INT_PTR CALLBACK about_proc(HWND hwnd, // handle of window
 UINT uMsg, // message identifier
 WPARAM wParam, // first message parameter
 LPARAM lParam // second message parameter
@@ -132,7 +132,7 @@ LPARAM lParam // second message parameter
 				message="OK";
 				break;
 			}
-			SetWindowText(GetDlgItem(hwnd,IDC_PABLIO_STATUS),message);
+			SetWindowTextA(GetDlgItem(hwnd,IDC_PABLIO_STATUS),message);
 			switch (audiotap_status.audiofile_init_status){
 			case LIBRARY_UNINIT:
 				message="Not initialized";
@@ -147,7 +147,7 @@ LPARAM lParam // second message parameter
 				message="OK";
 				break;
 			}
-			SetWindowText(GetDlgItem(hwnd,IDC_AUDIOFILE_STATUS),message);
+			SetWindowTextA(GetDlgItem(hwnd,IDC_AUDIOFILE_STATUS),message);
 			return 1;
 		}
 	case WM_COMMAND:
@@ -169,7 +169,7 @@ struct audiotap_advanced {
 	int       clock;
 };
 
-UINT APIENTRY wav_opensave_hook_proc ( HWND hdlg,
+UINT_PTR APIENTRY wav_opensave_hook_proc ( HWND hdlg,
  // handle to child dialog window
 
 UINT uiMsg,
@@ -200,7 +200,7 @@ LPARAM lParam
 	return 0;
 };
 
-UINT APIENTRY tap_open_hook_proc ( HWND hdlg,
+UINT_PTR APIENTRY tap_open_hook_proc ( HWND hdlg,
  // handle to child dialog window
 
 UINT uiMsg,
@@ -231,7 +231,7 @@ LPARAM lParam
 	return 0;
 };
 
-UINT APIENTRY tap_save_hook_proc ( HWND hdlg,
+UINT_PTR APIENTRY tap_save_hook_proc ( HWND hdlg,
  // handle to child dialog window
 
 UINT uiMsg,
@@ -384,7 +384,7 @@ void save_to_tap(HWND hwnd){
 	status_window = NULL;
 };
 
-BOOL CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
+INT_PTR CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
  // handle to dialog box
 
 UINT uMsg,
@@ -505,7 +505,7 @@ void read_from_tap(HWND hwnd){
 	status_window = NULL;
 }
 
-BOOL CALLBACK to_tap_advanced_proc(HWND hwnd, // handle of window
+INT_PTR CALLBACK to_tap_advanced_proc(HWND hwnd, // handle of window
 UINT uMsg, // message identifier
 WPARAM wParam, // first message parameter
 LPARAM lParam // second message parameter
@@ -552,7 +552,7 @@ LPARAM lParam // second message parameter
 	}
 }
 
-BOOL CALLBACK from_tap_advanced_proc(HWND hwnd, // handle of window
+INT_PTR CALLBACK from_tap_advanced_proc(HWND hwnd, // handle of window
 UINT uMsg, // message identifier
 WPARAM wParam, // first message parameter
 LPARAM lParam // second message parameter
@@ -586,7 +586,7 @@ LPARAM lParam // second message parameter
 	}
 }
 
-BOOL CALLBACK dialog_control(HWND hwnd, // handle of window
+INT_PTR CALLBACK dialog_control(HWND hwnd, // handle of window
 UINT uMsg, // message identifier
 WPARAM wParam, // first message parameter
 LPARAM lParam // second message parameter
@@ -622,7 +622,7 @@ LPARAM lParam // second message parameter
 				CheckRadioButton(hwnd,IDC_FROM_SOUND,IDC_FROM_WAV,IDC_FROM_WAV);
 			}
 		}
-		break;
+		return TRUE;
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDC_FROM_TAP){
 			EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), FALSE);
@@ -663,19 +663,17 @@ LPARAM lParam // second message parameter
 		if (LOWORD(wParam) == IDC_ABOUT){
 			DialogBox(instance, MAKEINTRESOURCE(IDD_ABOUT), hwnd, about_proc);
 		}
-		break;
+    return TRUE;
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
 		return TRUE;
-		break;
 	case WM_DESTROY:
 		/* The window is being destroyed, close the application
 		 * (the child button gets destroyed automatically). */
 		PostQuitMessage (0);
-		return 1;
-		break;
+    return TRUE;
 	default:
-		return 0;
+    return FALSE;
 	}
 }
 
@@ -687,7 +685,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	audiotap_status = audiotap_initialize();
 	if (audiotap_status.audiofile_init_status != LIBRARY_OK &&
 		audiotap_status.pablio_init_status != LIBRARY_OK){
-		MessageBox(0,"Both audiofile.dll and pablio.dll are missing or improperly installed",
+		MessageBoxA(0,"Both audiofile.dll and pablio.dll are missing or improperly installed",
 			"Cannot start Audiotap",MB_ICONERROR);
 		return 0;
 	}
