@@ -133,24 +133,39 @@ case 5:
   else
 	  statusbar_initialize(2147483647);
 
-  while(1){
-    if (datalen/10000 > old_datalen_div_10000){
-      old_datalen_div_10000 = datalen/10000;
-      currlen = audio2tap_get_current_pos(audiotap);
-      if (currlen != -1)
-		  statusbar_update(currlen);
-	  else{
-		  currloudness=audio2tap_get_current_sound_level(audiotap);
-		  if (currloudness != -1)
-			  statusbar_update(currloudness);
-	  }
-    }
-    ret=audio2tap_get_pulse(audiotap, &pulse);
-    if (ret!=AUDIOTAP_OK) break;
+	while(1){
+		if (datalen/10000 > old_datalen_div_10000){
+			old_datalen_div_10000 = datalen/10000;
+			currlen = audio2tap_get_current_pos(audiotap);
+			if (currlen != -1)
+                statusbar_update(currlen);
+			else{
+				currloudness=audio2tap_get_current_sound_level(audiotap);
+				if (currloudness != -1)
+					statusbar_update(currloudness);
+			}
+        }
+		ret=audio2tap_get_pulse(audiotap, &pulse);
+		if (ret!=AUDIOTAP_OK) break;
 
-	while (pulse > 0){
-		if (pulse >=256*8){
-			if (tap_version == 0){
+		if (pulse > 255*8 && tap_version == 1){
+			u_int8_t fourbytes[4];
+
+			fourbytes[0]=0;
+			fourbytes[1]= pulse        & 0xFF;
+			fourbytes[2]=(pulse >>  8) & 0xFF;
+			fourbytes[3]=(pulse >> 16) & 0xFF;
+
+			if (fwrite(fourbytes, 4, 1, fd) != 1){
+				error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+				goto err;
+			}
+			datalen+=4;
+		}
+		else{
+			pulse=(pulse+7)/8;
+
+			while(pulse>255){
 				const u_int8_t zero=0;
 
 				if (fwrite(&zero, 1, 1, fd) != 1){
@@ -158,36 +173,20 @@ case 5:
 					goto err;
 				}
 				datalen+=1;
-				pulse-=256*8;
+				pulse-=256;
 			}
-			else{
-				u_int8_t fourbytes[4];
 
-				fourbytes[0]=0;
-				fourbytes[1]= pulse        & 0xFF;
-				fourbytes[2]=(pulse >>  8) & 0xFF;
-				fourbytes[3]=(pulse >> 16) & 0xFF;
-
-				if (fwrite(fourbytes, 4, 1, fd) != 1){
+			if (pulse>0){
+				u_int8_t byte=pulse;
+				if (fwrite(&byte, 1, 1, fd) != 1){
 					error_message("Cannot write to file %s: %s", outfile, strerror(errno));
 					goto err;
 				}
-				datalen+=4;
-				break;
+				datalen+=1;
 			}
-		}
-		else{
-			u_int8_t byte=pulse/8;
-
-			if (fwrite(&byte, 1, 1, fd) != 1){
-				error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-				goto err;
-			}
-			datalen+=1;
-			break;
 		}
 	}
-  }
+    
   currlen = audio2tap_get_current_pos(audiotap);
   if (currlen != -1)
     statusbar_update(currlen);
