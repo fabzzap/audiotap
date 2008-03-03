@@ -38,9 +38,10 @@ void tap2audio(char *infile,
   char machine_string[12], tap_version, machine, videotype;
   unsigned int datalen = 0, old_datalen_div_10000 = 0;
   int totlen;
-  u_int32_t pulse;
+  u_int32_t pulse, this_pulse, overflow_pulse;
   unsigned char byte, threebytes[3];
   enum audiotap_status status;
+  unsigned char end_of_file = 0;
 
   fd=fopen(infile, "rb");
   if (fd == NULL){
@@ -114,6 +115,7 @@ void tap2audio(char *infile,
 
   statusbar_initialize(totlen);
   datalen = 20;
+  overflow_pulse = tap_version == 0 ? 256*8 : 0xFFFFFF;
 
   status = AUDIOTAP_OK;
   while(1){
@@ -122,18 +124,32 @@ void tap2audio(char *infile,
       statusbar_update(datalen);
     }
 
-    if (fread(&byte, 1, 1, fd) != 1) break;
-    datalen++;
-    if (byte != 0)
-      pulse = byte * 8;
-    else if (tap_version == 0)
-      pulse = 256 * 8;
-    else{
-      if (fread(threebytes, 3, 1, fd) != 1) break;
-      datalen += 3;
-      pulse = (threebytes[0]      ) +
-	      (threebytes[1] <<  8) +
-	      (threebytes[2] << 16);
+    pulse = 0;
+    do{
+      if (fread(&byte, 1, 1, fd) != 1){
+        end_of_file = 1;
+        break;
+      }
+      datalen++;
+      if (byte != 0)
+        this_pulse = byte * 8;
+      else if (tap_version == 0)
+        this_pulse = 256 * 8;
+      else{
+        if (fread(threebytes, 3, 1, fd) != 1){
+          end_of_file = 1;
+          break;
+        }
+        datalen += 3;
+        this_pulse = (threebytes[0]      ) +
+	                   (threebytes[1] <<  8) +
+	                   (threebytes[2] << 16);
+      }
+      pulse += this_pulse;
+    }while(this_pulse == overflow_pulse);
+    if (end_of_file)
+    {
+      break;
     }
     status = tap2audio_set_pulse(audiotap, pulse);
     if (status != AUDIOTAP_OK) break;
