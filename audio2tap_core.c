@@ -148,7 +148,7 @@ case 5:
 		ret=audio2tap_get_pulse(audiotap, &pulse);
 		if (ret!=AUDIOTAP_OK) break;
 
-		if (pulse > 255*8 && tap_version == 1){
+		if ((pulse > 255*8 || pulse == 0) && tap_version == 1){
 			u_int8_t fourbytes[4];
 
 			fourbytes[0]=0;
