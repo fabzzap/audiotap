@@ -128,6 +128,9 @@ LPARAM lParam // second message parameter
 			case LIBRARY_SYMBOLS_MISSING:
 				message="Present, but invalid: maybe old version";
 				break;
+      case LIBRARY_INIT_FAILED:
+        message="Present, but initialization failed";
+        break;
 			case LIBRARY_OK:
 				message="OK";
 				break;
@@ -153,6 +156,7 @@ LPARAM lParam // second message parameter
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK){
 			EndDialog(hwnd,0);
+      return 1;
 		}
 	default:
 		return 0;
