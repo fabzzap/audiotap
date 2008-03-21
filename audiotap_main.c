@@ -304,6 +304,7 @@ void save_to_tap(HWND hwnd){
 	OPENFILENAME file;
 	char input_filename[1024];
 	char output_filename[1024];
+    char* input_filename_base, *output_filename_base;
 	MSG msg;
 	struct audio2tap_parameters params;
 	DWORD thread_id;
@@ -330,6 +331,7 @@ void save_to_tap(HWND hwnd){
 		if (GetOpenFileName(&file) == FALSE)
 			return;
 	}
+    input_filename_base = input_filename + file.nFileOffset;
 
 	file.lpstrFilter ="TAP file (*.tap)\0*.tap\0All files\0*.*\0\0";
 	file.lpstrTitle = "Choose the TAP file to be created";
@@ -343,15 +345,16 @@ void save_to_tap(HWND hwnd){
 	file.lpstrDefExt = "tap";
 	if (GetSaveFileName(&file) == FALSE)
 		return;
+    output_filename_base = output_filename + file.nFileOffset;
 
 	status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,status_window_proc);
 	EnableWindow(hwnd, FALSE);
 	ShowWindow(status_window, SW_SHOWNORMAL);
 	UpdateWindow(status_window);
-	_snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename : "sound card"));
+	_snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename_base : "sound card"));
 	control=GetDlgItem(status_window, IDC_ORIGIN);
 	SetWindowText(control, msg_string);
-	_snprintf(msg_string, 128, "Destination: %s", output_filename);
+	_snprintf(msg_string, 128, "Destination: %s", output_filename_base);
 	control=GetDlgItem(status_window, IDC_DESTINATION);
 	SetWindowText(control, msg_string);
 	strncpy(msg_string, IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? "Progress indication" : "Volume level", 128);
@@ -434,6 +437,7 @@ void read_from_tap(HWND hwnd){
 	OPENFILENAME file;
 	char input_filename[1024];
 	char output_filename[1024];
+    char* input_filename_base, *output_filename_base;
 	MSG msg;
 	struct tap2audio_parameters params;
 	DWORD thread_id;
@@ -457,6 +461,7 @@ void read_from_tap(HWND hwnd){
 	file.lpfnHook = tap_open_hook_proc;
 	if (GetOpenFileName(&file) == FALSE)
 		return;
+    input_filename_base = input_filename + file.nFileOffset;
 
 	if (IsDlgButtonChecked(hwnd, IDC_TO_WAV)){
 		file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_ENABLEHOOK |
@@ -470,14 +475,15 @@ void read_from_tap(HWND hwnd){
 		if (GetSaveFileName(&file) == FALSE)
 			return;
 	}
+    output_filename_base = output_filename + file.nFileOffset;
 
 	status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,tap2audio_status_window_proc);
 	EnableWindow(hwnd, FALSE);
 	ShowWindow(status_window, SW_SHOWNORMAL);
 	UpdateWindow(status_window);
-	_snprintf(msg_string, 128, "Origin: %s", input_filename);
+	_snprintf(msg_string, 128, "Origin: %s", input_filename_base);
 	SetWindowText(GetDlgItem(status_window, IDC_ORIGIN), msg_string);
-	_snprintf(msg_string, 128, "Destination: %s", (IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? output_filename : "sound card"));
+	_snprintf(msg_string, 128, "Destination: %s", (IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? output_filename_base : "sound card"));
 	SetWindowText(GetDlgItem(status_window, IDC_DESTINATION), msg_string);
 	strncpy(msg_string, "Progress indication", 128);
 	SetWindowText(GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS), msg_string);
