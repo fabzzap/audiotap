@@ -483,7 +483,7 @@ void read_from_tap(HWND hwnd){
 	UpdateWindow(status_window);
 	_snprintf(msg_string, 128, "Origin: %s", input_filename_base);
 	SetWindowText(GetDlgItem(status_window, IDC_ORIGIN), msg_string);
-	_snprintf(msg_string, 128, "Destination: %s", (IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? output_filename_base : "sound card"));
+	_snprintf(msg_string, 128, "Destination: %s", (IsDlgButtonChecked(hwnd, IDC_TO_WAV) ? output_filename_base : "sound card"));
 	SetWindowText(GetDlgItem(status_window, IDC_DESTINATION), msg_string);
 	strncpy(msg_string, "Progress indication", 128);
 	SetWindowText(GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS), msg_string);
