@@ -109,12 +109,12 @@ CAPTION "About Audiotap"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,48,100,50,14
-    CTEXT           "Audiotap 1.3",IDC_STATIC,7,7,134,8
-    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2005",IDC_STATIC,7,18,
+    CTEXT           "Audiotap 1.4",IDC_STATIC,7,7,134,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2008",IDC_STATIC,7,18,
                     133,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
                     IDC_STATIC,7,28,134,21
-    RTEXT           "pablio.dll status",IDC_STATIC,7,50,57,8
+    RTEXT           "portaudio.dll status",IDC_STATIC,7,50,57,8
     RTEXT           "audiofile.dll status",IDC_STATIC,7,80,57,8
     LTEXT           "",IDC_AUDIOFILE_STATUS,68,80,73,19
     LTEXT           "",IDC_PABLIO_STATUS,70,51,71,25
