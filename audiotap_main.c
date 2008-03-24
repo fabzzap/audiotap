@@ -17,6 +17,7 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <htmlhelp.h>
 #include "resource.h"
 #include "audiotap.h"
 #include "tap2audio_core.h"
@@ -698,6 +699,9 @@ LPARAM lParam // second message parameter
 		 * (the child button gets destroyed automatically). */
 		PostQuitMessage (0);
     return TRUE;
+	case WM_HELP:
+		HtmlHelpA(hwnd,"docs\\audiotap.chm",HH_DISPLAY_TOC,0);
+		return TRUE;
 	default:
     return FALSE;
 	}

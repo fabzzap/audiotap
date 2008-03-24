@@ -10,7 +10,7 @@ CFLAGS += -g
 endif
 
 audiotap.exe: audiotap_main.o audio2tap_core.o tap2audio_core.o audiotap-resources.o
-	$(CC) $(LDFLAGS) -mwindows -o $@ $^ ../libaudiotap/audiotap.lib
+	$(CC) $(LDFLAGS) -mwindows -o $@ $^ ../libaudiotap/audiotap.lib -lhtmlhelp
 
 audio2tap.exe: audio2tap.o audiotap_callback.o audio2tap_core.o
 	$(CC) $(LDFLAGS) -o $@ $^ ../libaudiotap/audiotap.lib
