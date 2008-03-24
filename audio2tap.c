@@ -31,13 +31,13 @@ void sig_int(int signum){
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
-  printf("       audio2tap [-f <freq>] [-v vol] [-i] [-k|-o] [-t <output_TAP_file_name> [-0]] [WAV file]\n");
+  printf("       audio2tap [-i] [-d min_duration] [-H min_height] [-f <freq>] [-0] <output TAP file> [input WAV file]\n");
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
   printf("\t-i use inverted waveforms\n");
-  printf("\t-d ignore pulses if distance between min and max is less than <min duration> samples\n");
-  printf("\t-H ignore pulses if level difference between min and max is less than <min height> (range 0-255)\n");
+  printf("\t-d ignore pulses if distance between min and max is less than <min_duration> samples\n");
+  printf("\t-H ignore pulses if level difference between min and max is less than <min_height> (range 0-255)\n");
   printf("\t-f use input frequency <freq> Hz, default 44100 (only if input is sound card)\n");
   printf("\t-0 Generate a TAP file of version 0\n");
 }
