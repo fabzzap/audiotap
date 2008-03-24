@@ -5,6 +5,10 @@ audiotap-resources.o: audiotap.rc
 
 CFLAGS=-I../libtap -I../libaudiotap
 
+ifdef DEBUG
+CFLAGS += -g
+endif
+
 audiotap.exe: audiotap_main.o audio2tap_core.o tap2audio_core.o audiotap-resources.o
 	$(CC) $(LDFLAGS) -mwindows -o $@ $^ ../libaudiotap/audiotap.lib
 
