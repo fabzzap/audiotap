@@ -367,7 +367,7 @@ void save_to_tap(HWND hwnd){
 	params.input_filename = IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename : NULL;
 	params.output_filename = output_filename;
 	params.min_duration = (adv != NULL ? adv->min_duration : 3);
-	params.min_height = (adv != NULL ? adv->min_height<<24 : 10<<24);
+	params.min_height = (adv != NULL ? adv->min_height : 76);
 	params.freq = (adv != NULL ? adv->infreq : 44100);
 	params.inverted = IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED;
 	params.tap_version = (adv != NULL ? (unsigned char)adv->tap_version : 1);
@@ -544,12 +544,12 @@ LPARAM lParam // second message parameter
 			struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(hwnd),GWL_USERDATA);
 			BOOL success;
 			adv->min_height   = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_HEIGHT    ,&success,FALSE);
-			if (!success) adv->min_height = 10;
+			if (!success) adv->min_height = 76;
 			adv->min_duration = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_DURATION  ,&success,FALSE);
 			if (!success) adv->min_duration = 3;
 			adv->infreq         = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ          ,&success,FALSE);
 			if (!success) adv->infreq = 44100;
-			if (adv->min_height < 1) adv->min_height = 1;
+			if (adv->min_height > 100) adv->min_height = 100;
 			adv->clock=SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_GETCURSEL,0,0);
 			if (adv->clock==CB_ERR || adv->clock<0 || adv->clock>5)
 				adv->clock=0;
@@ -586,7 +586,8 @@ LPARAM lParam // second message parameter
 			if (!success) adv->volume = 254;
 			adv->outfreq = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,&success,FALSE);
 			if (!success) adv->outfreq = 44100;
-			if (adv->volume < 1) adv->volume = 1;
+			if (adv->volume     <   1) adv->volume     =   1;
+			if (adv->volume     > 255) adv->volume     = 255;
 			EndDialog(hwnd,0);
 		}
 		if (LOWORD(wParam) == IDCANCEL){
@@ -709,7 +710,7 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			LPSTR lpCmdLine, int nCmdShow ){
-	struct audiotap_advanced adv = {44100, 3, 10, 1, 44100, 254, 0};
+	struct audiotap_advanced adv = {44100, 3, 76, 1, 44100, 254, 0};
 
 	instance = hInstance;
 	audiotap_status = audiotap_initialize();
