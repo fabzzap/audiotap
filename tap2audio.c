@@ -30,15 +30,15 @@ void help(){
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
-  printf("\t-i use inverted waveforms\n");
-  printf("\t-f use output frequency <freq> Hz, default 44100\n");
-  printf("\t-v volume of the output sound (0-255, default 254)\n");
+  printf("\t-i: use inverted waveforms\n");
+  printf("\t-f: use output frequency <freq> Hz, default 44100\n");
+  printf("\t-v: volume of the output sound (0-255, default 254)\n");
   printf("If no output WAV file is specified, output is sound card\n");
 }
 
 void version(){
-  printf("tap2audio (part of Audiotap) version 1.3\n");
-  printf("(C) by Fabrizio Gennari, 2003-2005\n");
+  printf("tap2audio (part of Audiotap) version 1.4\n");
+  printf("(C) by Fabrizio Gennari, 2003-2008\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
@@ -70,11 +70,11 @@ int main(int argc, char** argv){
   while( (option=getopt_long(argc,argv,"v:f:ihV",cmdline,NULL)) != -1){
     switch(option){
     case 'v':
-      if (atoi(optarg) < 1 || atoi(optarg) > 255){
-	printf("Volume out of range 1-255\n");
-	exit(1);
-      };
       volume=atoi(optarg);
+      if (volume < 1 || volume > 255){
+        printf("Volume out of range 1-255\n");
+        exit(1);
+      };
       break;
     case 'f':
       freq=atoi(optarg);

@@ -31,20 +31,21 @@ void sig_int(int signum){
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
-  printf("       audio2tap [-i] [-d min_duration] [-H min_height] [-f <freq>] [-0] <output TAP file> [input WAV file]\n");
+  printf("       audio2tap [-i] [-d min_duration] [-H sensitivity] [-f <freq>] [-0] [-c c64ntsc|vicpal|vicntsc|c16pal|c16ntsc] <output TAP file> [input WAV file]\n");
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
-  printf("\t-i use inverted waveforms\n");
-  printf("\t-d ignore pulses if distance between min and max is less than <min_duration> samples\n");
-  printf("\t-H ignore pulses if level difference between min and max is less than <min_height> (range 0-255)\n");
-  printf("\t-f use input frequency <freq> Hz, default 44100 (only if input is sound card)\n");
-  printf("\t-0 Generate a TAP file of version 0\n");
+  printf("\t-i: use inverted waveforms\n");
+  printf("\t-d: ignore pulses if distance between min and max is less than <min_duration> samples\n");
+  printf("\t-H: set sensitivity to <sensitivity> (range 0-100)\n");
+  printf("\t-f: use input frequency <freq> Hz, default 44100 (only if input is sound card)\n");
+  printf("\t-0: Generate a TAP file of version 0\n");
+  printf("\t-c: Set clock frequency to match specified Commodore machine (default C64 PAL)\n");
 }
 
 void version(){
-  printf("audio2tap (part of Audiotap) version 1.3\n");
-  printf("(C) by Fabrizio Gennari, 2003-2005\n");
+  printf("audio2tap (part of Audiotap) version 1.4\n");
+  printf("(C) by Fabrizio Gennari, 2003-2008\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
@@ -53,19 +54,19 @@ void version(){
    
 int main(int argc, char** argv){
   struct audiotap_init_status status;
-  unsigned int min_duration = 2;
-  unsigned char min_height = 10;
+  unsigned int min_duration = 1;
+  unsigned char min_height = 12;
   u_int32_t freq = 44100;
   int inverted = 0;
   unsigned char tap_version = 1;
   struct option cmdline[]={
-    {"min-duration"      ,1,NULL,'d'},
-    {"min-height"        ,1,NULL,'H'},
-    {"tap-version-0"     ,0,NULL,'0'},
-    {"inverted-waveform" ,0,NULL,'i'},
-    {"freq"              ,1,NULL,'f'},
     {"help"              ,0,NULL,'h'},
     {"version"           ,0,NULL,'V'},
+    {"inverted-waveform" ,0,NULL,'i'},
+    {"min-duration"      ,1,NULL,'d'},
+    {"min-height"        ,1,NULL,'H'},
+    {"freq"              ,1,NULL,'f'},
+    {"tap-version-0"     ,0,NULL,'0'},
     {"clock"             ,1,NULL,'c'},
     {NULL                ,0,NULL,0}
   };
@@ -93,12 +94,20 @@ int main(int argc, char** argv){
         clock=4;
       else if(!strcmp(optarg,"c16ntsc"))
         clock=5;
+      else{
+        printf("Wrong argument to option -c\n");
+        exit(1);
+      }
       break;
     case 'd':
       min_duration=atoi(optarg);
       break;
     case 'H':
       min_height=atoi(optarg);
+      if (min_height > 100){
+        printf("Wrong argument to option -H, must be in range 0-100\n");
+        exit(1);
+      }
       break;
     case 'f':
       freq=atoi(optarg);
@@ -157,7 +166,7 @@ int main(int argc, char** argv){
   }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, min_duration, min_height << 24, inverted, tap_version,clock);
+  audio2tap(infile, outfile, freq, min_duration, min_height, inverted, tap_version,clock);
 
   exit(0);
 }
