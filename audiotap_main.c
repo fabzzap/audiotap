@@ -366,8 +366,8 @@ void save_to_tap(HWND hwnd){
 
 	params.input_filename = IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename : NULL;
 	params.output_filename = output_filename;
-	params.min_duration = (adv != NULL ? adv->min_duration : 3);
-	params.min_height = (adv != NULL ? adv->min_height : 76);
+	params.min_duration = (adv != NULL ? adv->min_duration : 1);
+	params.min_height = (adv != NULL ? adv->min_height : 12);
 	params.freq = (adv != NULL ? adv->infreq : 44100);
 	params.inverted = IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED;
 	params.tap_version = (adv != NULL ? (unsigned char)adv->tap_version : 1);
@@ -544,9 +544,9 @@ LPARAM lParam // second message parameter
 			struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(hwnd),GWL_USERDATA);
 			BOOL success;
 			adv->min_height   = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_HEIGHT    ,&success,FALSE);
-			if (!success) adv->min_height = 76;
+			if (!success) adv->min_height = 12;
 			adv->min_duration = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_DURATION  ,&success,FALSE);
-			if (!success) adv->min_duration = 3;
+			if (!success) adv->min_duration = 1;
 			adv->infreq         = GetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_FREQ          ,&success,FALSE);
 			if (!success) adv->infreq = 44100;
 			if (adv->min_height > 100) adv->min_height = 100;
@@ -709,7 +709,7 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			LPSTR lpCmdLine, int nCmdShow ){
-	struct audiotap_advanced adv = {44100, 3, 76, 1, 44100, 254, 0};
+	struct audiotap_advanced adv = {44100, 1, 12, 1, 44100, 254, 0};
 
 	instance = hInstance;
 	audiotap_status = audiotap_initialize();
