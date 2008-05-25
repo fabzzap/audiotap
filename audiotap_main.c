@@ -587,7 +587,6 @@ LPARAM lParam // second message parameter
 			adv->outfreq = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,&success,FALSE);
 			if (!success) adv->outfreq = 44100;
 			if (adv->volume     <   1) adv->volume     =   1;
-			if (adv->volume     > 255) adv->volume     = 255;
 			EndDialog(hwnd,0);
 		}
 		if (LOWORD(wParam) == IDCANCEL){
