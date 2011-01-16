@@ -31,13 +31,13 @@ void audio2tap_interrupt()
 }
 
 void audio2tap(char *infile,
-	      char *outfile,
-	      u_int32_t freq,
-	      u_int32_t min_duration,
-	      u_int32_t min_height,
-	      int inverted,
-	      unsigned char tap_version,
-	      int clock
+          char *outfile,
+          u_int32_t freq,
+          u_int32_t min_duration,
+          u_int32_t min_height,
+          int inverted,
+          unsigned char tap_version,
+          int clock
 )
 {
   FILE *fd;
@@ -57,44 +57,38 @@ void audio2tap(char *infile,
   }
 
   switch(clock){
-default:
-	machine=TAP_MACHINE_C64;
-	videotype=TAP_VIDEOTYPE_PAL;
-	break;
-case 1:
-	machine=TAP_MACHINE_C64;
-	videotype=TAP_VIDEOTYPE_NTSC;
-	break;
-case 2:
-	machine=TAP_MACHINE_VIC;
-	videotype=TAP_VIDEOTYPE_PAL;
-	break;
-case 3:
-	machine=TAP_MACHINE_VIC;
-	videotype=TAP_VIDEOTYPE_NTSC;
-	break;
-case 4:
-	machine=TAP_MACHINE_C16;
-	videotype=TAP_VIDEOTYPE_PAL;
-	break;
-case 5:
-	machine=TAP_MACHINE_C16;
-	videotype=TAP_VIDEOTYPE_NTSC;
-	break;
+  default:
+    machine=TAP_MACHINE_C64;
+    videotype=TAP_VIDEOTYPE_PAL;
+    break;
+  case 1:
+    machine=TAP_MACHINE_C64;
+    videotype=TAP_VIDEOTYPE_NTSC;
+    break;
+  case 2:
+    machine=TAP_MACHINE_VIC;
+    videotype=TAP_VIDEOTYPE_PAL;
+    break;
+  case 3:
+    machine=TAP_MACHINE_VIC;
+    videotype=TAP_VIDEOTYPE_NTSC;
+    break;
+  case 4:
+    machine=TAP_MACHINE_C16;
+    videotype=TAP_VIDEOTYPE_PAL;
+    break;
+  case 5:
+    machine=TAP_MACHINE_C16;
+    videotype=TAP_VIDEOTYPE_NTSC;
+    break;
   }
 
-  if(audio2tap_open(&audiotap, infile, freq, min_duration, min_height, inverted) != AUDIOTAP_OK){
-	  if (infile)
-		  error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", infile);
-	  else
-		  error_message("Sound card cannot be opened");
+  if(audio2tap_open_with_machine(&audiotap, infile, freq, min_duration, min_height, inverted, machine, videotype) != AUDIOTAP_OK){
+    if (infile)
+      error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", infile);
+    else
+      error_message("Sound card cannot be opened");
     return;
-  }
-
-  if(audio2tap_set_machine(audiotap,machine,videotype)!=AUDIOTAP_OK){
-      error_message("Could not set machine and video type");
-	  audio2tap_close(audiotap);
-	  return;
   }
 
   machine_string=(machine!=TAP_MACHINE_C16?c64_machine_string:c16_machine_string);
@@ -131,61 +125,61 @@ case 5:
   if ( (totlen = audio2tap_get_total_len(audiotap)) != -1)
     statusbar_initialize(totlen);
   else
-	  statusbar_initialize(2147483647);
+      statusbar_initialize(2147483647);
 
-	while(1){
-		if (datalen/10000 > old_datalen_div_10000){
-			old_datalen_div_10000 = datalen/10000;
-			currlen = audio2tap_get_current_pos(audiotap);
-			if (currlen != -1)
+  while(1){
+    if (datalen/10000 > old_datalen_div_10000){
+            old_datalen_div_10000 = datalen/10000;
+            currlen = audio2tap_get_current_pos(audiotap);
+            if (currlen != -1)
                 statusbar_update(currlen);
-			else{
-				currloudness=audio2tap_get_current_sound_level(audiotap);
-				if (currloudness != -1)
-					statusbar_update(currloudness);
-			}
-        }
-		ret=audio2tap_get_pulse(audiotap, &pulse);
-		if (ret!=AUDIOTAP_OK) break;
+            else{
+                currloudness=audio2tap_get_current_sound_level(audiotap);
+                if (currloudness != -1)
+                    statusbar_update(currloudness);
+            }
+    }
+    ret=audio2tap_get_pulse(audiotap, &pulse);
+    if (ret!=AUDIOTAP_OK) break;
 
-		if ((pulse > 255*8 || pulse == 0) && tap_version == 1){
-			u_int8_t fourbytes[4];
+    if ((pulse > 255*8 || pulse == 0) && tap_version == 1){
+      u_int8_t fourbytes[4];
 
-			fourbytes[0]=0;
-			fourbytes[1]= pulse        & 0xFF;
-			fourbytes[2]=(pulse >>  8) & 0xFF;
-			fourbytes[3]=(pulse >> 16) & 0xFF;
+      fourbytes[0]=0;
+      fourbytes[1]= pulse        & 0xFF;
+      fourbytes[2]=(pulse >>  8) & 0xFF;
+      fourbytes[3]=(pulse >> 16) & 0xFF;
 
-			if (fwrite(fourbytes, 4, 1, fd) != 1){
-				error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-				goto err;
-			}
-			datalen+=4;
-		}
-		else{
-			pulse=(pulse+7)/8;
+      if (fwrite(fourbytes, 4, 1, fd) != 1){
+                error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+                goto err;
+      }
+      datalen+=4;
+    }
+    else{
+      pulse=(pulse+7)/8;
 
-			while(pulse>255){
-				const u_int8_t zero=0;
+      while(pulse>255){
+                const u_int8_t zero=0;
 
-				if (fwrite(&zero, 1, 1, fd) != 1){
-					error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-					goto err;
-				}
-				datalen+=1;
-				pulse-=256;
-			}
+                if (fwrite(&zero, 1, 1, fd) != 1){
+                    error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+                    goto err;
+                }
+                datalen+=1;
+                pulse-=256;
+      }
 
-			if (pulse>0){
-				u_int8_t byte=pulse;
-				if (fwrite(&byte, 1, 1, fd) != 1){
-					error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-					goto err;
-				}
-				datalen+=1;
-			}
-		}
-	}
+      if (pulse>0){
+                u_int8_t byte=pulse;
+                if (fwrite(&byte, 1, 1, fd) != 1){
+                    error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+                    goto err;
+                }
+                datalen+=1;
+      }
+    }
+  }
     
   currlen = audio2tap_get_current_pos(audiotap);
   if (currlen != -1)
@@ -212,3 +206,4 @@ case 5:
   fclose(fd);
   audio2tap_close(audiotap);
 }
+
