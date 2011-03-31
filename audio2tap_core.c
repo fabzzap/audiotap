@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/types.h>
 #include "audiotap_callback.h"
 #include "audiotap.h"
@@ -32,12 +33,14 @@ void audio2tap_interrupt()
 
 void audio2tap(char *infile,
           char *outfile,
-          u_int32_t freq,
-          u_int32_t min_duration,
-          u_int32_t min_height,
-          int inverted,
+          uint32_t freq,
+          uint32_t min_duration,
+          uint8_t sensitivity,
+          uint8_t inverted,
+          uint8_t initial_threshold,
           unsigned char tap_version,
-          int clock
+          int clock,
+          uint8_t videotype
 )
 {
   FILE *fd;
@@ -48,8 +51,9 @@ void audio2tap(char *infile,
   unsigned int datalen = 0, old_datalen_div_10000 = 0;
   int totlen, currlen;
   int32_t currloudness;
-  u_int8_t machine;
-  u_int8_t videotype;
+  uint8_t machine;
+  enum tap_trigger trigger = inverted ? TAP_TRIGGER_ON_FALLING_EDGE : TAP_TRIGGER_ON_RISING_EDGE;
+  uint32_t overflow = 0xFFFFFF;
 
   if (tap_version > 1){
     error_message("TAP version %u is unsupported", infile);
@@ -59,31 +63,24 @@ void audio2tap(char *infile,
   switch(clock){
   default:
     machine=TAP_MACHINE_C64;
-    videotype=TAP_VIDEOTYPE_PAL;
     break;
   case 1:
-    machine=TAP_MACHINE_C64;
-    videotype=TAP_VIDEOTYPE_NTSC;
-    break;
-  case 2:
     machine=TAP_MACHINE_VIC;
-    videotype=TAP_VIDEOTYPE_PAL;
     break;
   case 3:
-    machine=TAP_MACHINE_VIC;
-    videotype=TAP_VIDEOTYPE_NTSC;
+    machine=TAP_MACHINE_C16;
     break;
   case 4:
     machine=TAP_MACHINE_C16;
-    videotype=TAP_VIDEOTYPE_PAL;
-    break;
-  case 5:
-    machine=TAP_MACHINE_C16;
-    videotype=TAP_VIDEOTYPE_NTSC;
+    trigger = TAP_TRIGGER_ON_BOTH_EDGES;
+    tap_version = 2;
     break;
   }
 
-  if(audio2tap_open_with_machine(&audiotap, infile, freq, min_duration, min_height, inverted, machine, videotype) != AUDIOTAP_OK){
+  if(tap_version == 0)
+    overflow = 0x800;
+
+  if(audio2tap_open_with_machine(&audiotap, infile, freq, min_duration, sensitivity, initial_threshold, inverted, machine, videotype) != AUDIOTAP_OK){
     if (infile)
       error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", infile);
     else
@@ -125,7 +122,7 @@ void audio2tap(char *infile,
   if ( (totlen = audio2tap_get_total_len(audiotap)) != -1)
     statusbar_initialize(totlen);
   else
-      statusbar_initialize(2147483647);
+    statusbar_initialize(INT_MAX);
 
   while(1){
     if (datalen/10000 > old_datalen_div_10000){
@@ -142,7 +139,25 @@ void audio2tap(char *infile,
     ret=audio2tap_get_pulse(audiotap, &pulse);
     if (ret!=AUDIOTAP_OK) break;
 
-    if ((pulse > 255*8 || pulse == 0) && tap_version == 1){
+    for(;pulse >= overflow;pulse -= overflow){
+      if (tap_version == 0){
+        uint8_t overflow_v0 = 0;
+        if (fwrite(&overflow_v0, 1, 1, fd) != 1){
+          error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+          goto err;
+        }
+        datalen+=4;
+      }
+      else{
+        uint8_t overflow_v1[] = {0, 0xFF, 0xFF, 0xFF};
+        if (fwrite(overflow_v1, 4, 1, fd) != 1){
+          error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+          goto err;
+        }
+        datalen++;
+      }
+    }
+    if (tap_version > 0 && pulse >=  overflow){
       u_int8_t fourbytes[4];
 
       fourbytes[0]=0;
@@ -156,28 +171,13 @@ void audio2tap(char *infile,
       }
       datalen+=4;
     }
-    else{
-      pulse=(pulse+7)/8;
-
-      while(pulse>255){
-                const u_int8_t zero=0;
-
-                if (fwrite(&zero, 1, 1, fd) != 1){
-                    error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-                    goto err;
-                }
-                datalen+=1;
-                pulse-=256;
+    else if (pulse > 0 || tap_version > 0){
+      u_int8_t byte=(pulse+7)/8;
+      if (fwrite(&byte, 1, 1, fd) != 1){
+        error_message("Cannot write to file %s: %s", outfile, strerror(errno));
+        goto err;
       }
-
-      if (pulse>0){
-                u_int8_t byte=pulse;
-                if (fwrite(&byte, 1, 1, fd) != 1){
-                    error_message("Cannot write to file %s: %s", outfile, strerror(errno));
-                    goto err;
-                }
-                datalen+=1;
-      }
+      datalen+=1;
     }
   }
     

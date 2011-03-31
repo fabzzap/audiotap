@@ -12,9 +12,13 @@
  * This file is part of Audiotap core files
  */
 
+#include "tap_types.h"
+
 void tap2audio(char *infile,
 	      char *outfile,
-	      int inverted,
+	      uint8_t inverted,
+	      enum tapdec_waveform waveform,
 	      int32_t volume,
 	      int freq);
 void tap2audio_interrupt(void);
+

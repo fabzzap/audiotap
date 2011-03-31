@@ -18,6 +18,7 @@
 #include <errno.h>
 #include "audiotap.h"
 #include "audiotap_callback.h"
+#include "tap2audio_core.h"
 
 static const char c64_machine_string[]="C64-TAPE-RAW";
 static const char c16_machine_string[]="C16-TAPE-RAW";
@@ -30,7 +31,8 @@ void tap2audio_interrupt(void){
 
 void tap2audio(char *infile,
 	      char *outfile,
-	      int inverted,
+	      uint8_t inverted,
+	      enum tapdec_waveform waveform,
 	      int32_t volume,
 	      int freq)
 {
@@ -42,6 +44,9 @@ void tap2audio(char *infile,
   unsigned char byte, threebytes[3];
   enum audiotap_status status;
   unsigned char end_of_file = 0;
+  enum tap_trigger trigger_type = inverted ?
+                                  TAP_TRIGGER_ON_FALLING_EDGE :
+                                  TAP_TRIGGER_ON_RISING_EDGE;
 
   fd=fopen(infile, "rb");
   if (fd == NULL){
@@ -80,10 +85,16 @@ void tap2audio(char *infile,
     return;
   }
     
-  if(tap_version != 0 && tap_version != 1){
+  if(tap_version != 0 
+ && tap_version != 1
+ && tap_version != 2
+    ){
     error_message("File %s has unsupported TAP version %u", infile, tap_version);
     return;
   }
+
+  if(tap_version == 2)
+    trigger_type = TAP_TRIGGER_ON_BOTH_EDGES;
     
   if(fseek(fd, 0, SEEK_END) != 0){
     error_message("Error in fseek: %s", strerror(errno));
@@ -105,7 +116,7 @@ void tap2audio(char *infile,
     return;
   }
 
-  if (tap2audio_open(&audiotap, outfile, volume, freq, inverted, machine, videotype) != AUDIOTAP_OK){
+  if (tap2audio_open_with_machine(&audiotap, outfile, volume, freq, trigger_type, waveform, machine, videotype) != AUDIOTAP_OK){
     if (outfile)
       error_message("File %s cannot be opened", infile);
     else

@@ -35,12 +35,14 @@ void help(){
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
-  printf("\t-i: use inverted waveforms\n");
-  printf("\t-d: ignore pulses if distance between min and max is less than <min_duration> samples\n");
-  printf("\t-H: set sensitivity to <sensitivity> (range 0-100)\n");
+  printf("\t-i: use inverted waveforms (ignored if -c c16semi present)\n");
+  printf("\t-d <min_duration>: ignore pulses if distance between min and max is less than or equal to <min_duration> samples (default:0)\n");
+  printf("\t-H <sensitivity>: set sensitivity to <sensitivity> (range 0-100, default:12)\n");
   printf("\t-f: use input frequency <freq> Hz, default 44100 (only if input is sound card)\n");
   printf("\t-0: Generate a TAP file of version 0\n");
-  printf("\t-c: Set clock frequency to match specified Commodore machine (default C64 PAL)\n");
+  printf("\t-c <c64|c16|c16semi|vic20>: Set clock frequency to match specified Commodore machine (default c64)\n");
+  printf("\t-n: use NTSC timing\n");
+  printf("\t-t <initial_threshold>: ignore initial pulses until their amplitude exceeds a range centred around <initial_threshold> (0-255, default:20)\n");
 }
 
 void version(){
@@ -54,8 +56,8 @@ void version(){
    
 int main(int argc, char** argv){
   struct audiotap_init_status status;
-  unsigned int min_duration = 1;
-  unsigned char min_height = 12;
+  unsigned int min_duration = 0;
+  unsigned char sensitivity = 12;
   u_int32_t freq = 44100;
   int inverted = 0;
   unsigned char tap_version = 1;
@@ -68,11 +70,15 @@ int main(int argc, char** argv){
     {"freq"              ,1,NULL,'f'},
     {"tap-version-0"     ,0,NULL,'0'},
     {"clock"             ,1,NULL,'c'},
+    {"ntsc"              ,0,NULL,'n'},
+    {"initial-threshold" ,1,NULL,'t'},
     {NULL                ,0,NULL,0}
   };
   char *infile, *outfile;
   int option;
   int clock=0;
+  uint8_t videotype = TAP_VIDEOTYPE_PAL;
+  uint8_t initial_threshold = 20;
 
   status = audiotap_initialize();
   if (status.audiofile_init_status != LIBRARY_OK &&
@@ -81,19 +87,17 @@ int main(int argc, char** argv){
     exit(1);
   }
   
-  while( (option=getopt_long(argc,argv,"d:H:0ihVc:",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"d:H:0ihVc:nw:t:",cmdline,NULL)) != -1){
     switch(option){
     case 'c':
-      if(!strcmp(optarg,"c64ntsc"))
+      if(!strcmp(optarg,"c64"))
+        clock=0;
+      else if(!strcmp(optarg,"vic"))
         clock=1;
-      else if(!strcmp(optarg,"vicpal"))
+      else if(!strcmp(optarg,"c16"))
         clock=2;
-      else if(!strcmp(optarg,"vicntsc"))
+      else if(!strcmp(optarg,"c16semi"))
         clock=3;
-      else if(!strcmp(optarg,"c16pal"))
-        clock=4;
-      else if(!strcmp(optarg,"c16ntsc"))
-        clock=5;
       else{
         printf("Wrong argument to option -c\n");
         exit(1);
@@ -102,9 +106,12 @@ int main(int argc, char** argv){
     case 'd':
       min_duration=atoi(optarg);
       break;
+    case 't':
+      initial_threshold=atoi(optarg);
+      break;
     case 'H':
-      min_height=atoi(optarg);
-      if (min_height > 100){
+      sensitivity=atoi(optarg);
+      if (sensitivity > 100){
         printf("Wrong argument to option -H, must be in range 0-100\n");
         exit(1);
       }
@@ -117,6 +124,9 @@ int main(int argc, char** argv){
       break;
     case 'i':
       inverted=1;
+      break;
+    case 'n':
+      videotype=TAP_VIDEOTYPE_NTSC;
       break;
     case 'h':
       help();
@@ -166,7 +176,8 @@ int main(int argc, char** argv){
   }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, min_duration, min_height, inverted, tap_version,clock);
+  audio2tap(infile, outfile, freq, min_duration, sensitivity, inverted, initial_threshold, tap_version, clock, videotype);
 
   exit(0);
 }
+

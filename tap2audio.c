@@ -19,6 +19,7 @@
 #include <sys/types.h>
 
 #include "audiotap.h"
+#include "tap2audio_core.h"
 
 void sig_int(int signum){
 	tap2audio_interrupt();
@@ -30,9 +31,10 @@ void help(){
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
-  printf("\t-i: use inverted waveforms\n");
-  printf("\t-f: use output frequency <freq> Hz, default 44100\n");
-  printf("\t-v: volume of the output sound (0-255, default 254)\n");
+  printf("\t-i: use inverted waveforms (ignored is input is TAP version 2)\n");
+  printf("\t-f <freq>: use output frequency <freq> Hz (default:44100)\n");
+  printf("\t-v: volume of the output sound (0-255, default:254)\n");
+  printf("\t-w <square|triangle|sine>: set waveform (default:square)\n");
   printf("If no output WAV file is specified, output is sound card\n");
 }
 
@@ -46,13 +48,15 @@ void version(){
 }
    
 int main(int argc, char** argv){
-  int inverted = 0;
+  uint8_t inverted = 0;
+  enum tapdec_waveform waveform = TAPDEC_SQUARE;
   int volume = 254;
   int freq = 44100;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
     {"frequency"         ,1,NULL,'f'},
     {"inverted-waveform" ,0,NULL,'i'},
+    {"waveform"          ,1,NULL,'w'},
     {"help"              ,0,NULL,'h'},
     {"version"           ,0,NULL,'V'},
     {NULL                ,0,NULL,0}
@@ -67,7 +71,7 @@ int main(int argc, char** argv){
     exit(1);
   }
 
-  while( (option=getopt_long(argc,argv,"v:f:ihV",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"v:f:ihVw:",cmdline,NULL)) != -1){
     switch(option){
     case 'v':
       volume=atoi(optarg);
@@ -88,6 +92,18 @@ int main(int argc, char** argv){
     case 'V':
       version();
       exit(0);
+    case 'w':
+      if(!strcmp(optarg,"square"))
+        waveform = TAPDEC_SQUARE;
+      else if(!strcmp(optarg,"sine"))
+        waveform = TAPDEC_SINE;
+      else if(!strcmp(optarg,"triangle"))
+        waveform = TAPDEC_TRIANGLE;
+      else{
+        printf("Wrong argument to option -c\n");
+        exit(1);
+      }
+      break;
     default:
       help();
       exit(1);
@@ -122,6 +138,7 @@ int main(int argc, char** argv){
 
   signal(SIGINT, sig_int);
 
-  tap2audio(argv[0], argv[1], inverted, volume << 23, freq);
+  tap2audio(argv[0], argv[1], inverted, waveform, volume << 23, freq);
   exit(0);
 }
+
