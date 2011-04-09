@@ -23,7 +23,6 @@
 #include <signal.h>
 
 #include "audio2tap_core.h"
-#include "audiotap.h"
 
 void sig_int(int signum){
 	audio2tap_interrupt();
@@ -46,8 +45,8 @@ void help(){
 }
 
 void version(){
-  printf("audio2tap (part of Audiotap) version 1.4\n");
-  printf("(C) by Fabrizio Gennari, 2003-2008\n");
+  printf("audio2tap (part of Audiotap) version 1.5\n");
+  printf("(C) by Fabrizio Gennari, 2003-2011\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
@@ -56,10 +55,13 @@ void version(){
    
 int main(int argc, char** argv){
   struct audiotap_init_status status;
-  unsigned int min_duration = 0;
-  unsigned char sensitivity = 12;
+  struct tapdec_params params = {
+  /* min_duration */ 0,
+  /* sensitivity */ 12,
+  /* initial_threshold */ 20,
+  /* inverted */ TAP_TRIGGER_ON_RISING_EDGE
+  };
   u_int32_t freq = 44100;
-  int inverted = 0;
   unsigned char tap_version = 1;
   struct option cmdline[]={
     {"help"              ,0,NULL,'h'},
@@ -78,11 +80,11 @@ int main(int argc, char** argv){
   int option;
   int clock=0;
   uint8_t videotype = TAP_VIDEOTYPE_PAL;
-  uint8_t initial_threshold = 20;
 
   status = audiotap_initialize();
-  if (status.audiofile_init_status != LIBRARY_OK &&
-      status.pablio_init_status != LIBRARY_OK){
+  if ((status.audiofile_init_status != LIBRARY_OK &&
+       status.portaudio_init_status != LIBRARY_OK)
+    || status.tapencoder_init_status != LIBRARY_OK){
     printf("Failed to initialize audiotap library: both audiofile and pablio failed to load");
     exit(1);
   }
@@ -104,14 +106,14 @@ int main(int argc, char** argv){
       }
       break;
     case 'd':
-      min_duration=atoi(optarg);
+      params.min_duration=atoi(optarg);
       break;
     case 't':
-      initial_threshold=atoi(optarg);
+      params.initial_threshold=atoi(optarg);
       break;
     case 'H':
-      sensitivity=atoi(optarg);
-      if (sensitivity > 100){
+      params.sensitivity=atoi(optarg);
+      if (params.sensitivity > 100){
         printf("Wrong argument to option -H, must be in range 0-100\n");
         exit(1);
       }
@@ -123,7 +125,7 @@ int main(int argc, char** argv){
       tap_version=0;
       break;
     case 'i':
-      inverted=1;
+      params.inverted=TAP_TRIGGER_ON_FALLING_EDGE;
       break;
     case 'n':
       videotype=TAP_VIDEOTYPE_NTSC;
@@ -161,7 +163,7 @@ int main(int argc, char** argv){
   else outfile = argv[0];
 
   if (argc == 1){
-    if (status.pablio_init_status != LIBRARY_OK){
+    if (status.portaudio_init_status != LIBRARY_OK){
       printf("Cannot read from sound card: pablio library missing or invalid\n");
       exit(1);
     }
@@ -176,7 +178,7 @@ int main(int argc, char** argv){
   }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, min_duration, sensitivity, inverted, initial_threshold, tap_version, clock, videotype);
+  audio2tap(infile, outfile, freq, &params, tap_version, clock, videotype);
 
   exit(0);
 }

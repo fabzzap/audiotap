@@ -13,16 +13,13 @@
  * This file is part of Audiotap core files
  */
 
-#include <stdint.h>
+#include "audiotap.h"
 
 void audio2tap_interrupt();
 void audio2tap(char *infile,
           char *outfile,
           uint32_t freq,
-          uint32_t min_duration,
-          uint8_t sensitivity,
-          uint8_t inverted,
-          uint8_t initial_threshold,
+          struct tapdec_params *params,
           unsigned char tap_version,
           int clock,
           uint8_t videotype);
