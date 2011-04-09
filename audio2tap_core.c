@@ -24,8 +24,6 @@
 static const char c64_machine_string[]="C64-TAPE-RAW";
 static const char c16_machine_string[]="C16-TAPE-RAW";
 
-static uint8_t interrupted;
-
 static struct audiotap *audiotap_in = NULL;
 
 void audio2tap_interrupt(int ignored)
@@ -51,8 +49,6 @@ void audio2tap(char *infile,
   int32_t currloudness;
   uint8_t machine;
   struct audiotap *audiotap_out;
-
-  interrupted = 0;
 
   if (tap_version > 1){
     error_message("TAP version %u is unsupported", infile);
@@ -110,7 +106,7 @@ void audio2tap(char *infile,
 
   signal(SIGINT, audio2tap_interrupt);
 
-  while(!interrupted && ret == AUDIOTAP_OK){
+  while(ret == AUDIOTAP_OK){
     uint32_t pulse, raw_pulse;
     if (datalen/10000 > old_datalen_div_10000){
       old_datalen_div_10000 = datalen/10000;
