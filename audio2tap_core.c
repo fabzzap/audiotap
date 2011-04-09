@@ -62,10 +62,10 @@ void audio2tap(char *infile,
   case 1:
     machine=TAP_MACHINE_VIC;
     break;
-  case 3:
+  case 2:
     machine=TAP_MACHINE_C16;
     break;
-  case 4:
+  case 3:
     machine=TAP_MACHINE_C16;
     params->inverted = TAP_TRIGGER_ON_BOTH_EDGES;
     tap_version = 2;
