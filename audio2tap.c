@@ -20,13 +20,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <malloc.h>
-#include <signal.h>
 
 #include "audio2tap_core.h"
-
-void sig_int(int signum){
-	audio2tap_interrupt();
-}
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
@@ -176,7 +171,6 @@ int main(int argc, char** argv){
     }
     infile=argv[1];
   }      
-  signal(SIGINT, sig_int);
 
   audio2tap(infile, outfile, freq, &params, tap_version, clock, videotype);
 

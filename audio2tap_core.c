@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
+#include <signal.h>
 #include <sys/types.h>
 #include "audiotap_callback.h"
 #include "audio2tap_core.h"
@@ -25,9 +26,11 @@ static const char c16_machine_string[]="C16-TAPE-RAW";
 
 static uint8_t interrupted;
 
-void audio2tap_interrupt()
+static struct audiotap *audiotap_in = NULL;
+
+void audio2tap_interrupt(int ignored)
 {
-  interrupted = 1;
+  audiotap_terminate(audiotap_in);
 }
 
 void audio2tap(char *infile,
@@ -47,7 +50,7 @@ void audio2tap(char *infile,
   int totlen, currlen;
   int32_t currloudness;
   uint8_t machine;
-  struct audiotap *audiotap_in, *audiotap_out;
+  struct audiotap *audiotap_out;
 
   interrupted = 0;
 
@@ -105,6 +108,8 @@ void audio2tap(char *infile,
   else
     statusbar_initialize(INT_MAX);
 
+  signal(SIGINT, audio2tap_interrupt);
+
   while(!interrupted && ret == AUDIOTAP_OK){
     uint32_t pulse, raw_pulse;
     if (datalen/10000 > old_datalen_div_10000){
@@ -134,6 +139,8 @@ void audio2tap(char *infile,
     warning_message("Interrupted by user");
   else if(ret!=AUDIOTAP_EOF)
     error_message("Something went wrong");
+
+  signal(SIGINT, SIG_DFL);
 
   audio2tap_close(audiotap_in);
   tap2audio_close(audiotap_out);
