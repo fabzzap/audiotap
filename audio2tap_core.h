@@ -15,7 +15,6 @@
 
 #include "audiotap.h"
 
-void audio2tap_interrupt();
 void audio2tap(char *infile,
           char *outfile,
           uint32_t freq,

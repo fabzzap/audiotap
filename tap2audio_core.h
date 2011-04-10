@@ -20,5 +20,4 @@ void tap2audio(char *infile,
 	      enum tapdec_waveform waveform,
 	      int32_t volume,
 	      int freq);
-void tap2audio_interrupt(void);
 

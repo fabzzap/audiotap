@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <errno.h>
 #include "audiotap.h"
@@ -23,9 +24,9 @@
 static const char c64_machine_string[]="C64-TAPE-RAW";
 static const char c16_machine_string[]="C16-TAPE-RAW";
 
-struct audiotap *audiotap;
+struct audiotap *audiotap = NULL;
 
-void tap2audio_interrupt(void){
+void tap2audio_interrupt(int ignored){
   audiotap_terminate(audiotap);
 }
 
@@ -36,142 +37,64 @@ void tap2audio(char *infile,
 	      int32_t volume,
 	      int freq)
 {
-  FILE *fd;
-  char machine_string[12], tap_version, machine, videotype;
-  unsigned int datalen = 0, old_datalen_div_10000 = 0;
+  uint8_t semiwaves, machine, videotype;
+  unsigned int datalen = 0;
   int totlen;
-  u_int32_t pulse, this_pulse, overflow_pulse;
-  unsigned char byte, threebytes[3];
-  enum audiotap_status status;
-  unsigned char end_of_file = 0;
-  enum tap_trigger trigger_type = inverted ?
-                                  TAP_TRIGGER_ON_FALLING_EDGE :
-                                  TAP_TRIGGER_ON_RISING_EDGE;
+  enum audiotap_status status = AUDIOTAP_OK;
+  enum tap_trigger trigger_type;
+  struct audiotap *audiotap_in;
+  int currlen;
 
-  fd=fopen(infile, "rb");
-  if (fd == NULL){
-    error_message("Cannot open file %s: %s", infile, strerror(errno));
+  if (audio2tap_open_from_file(&audiotap_in,
+                               infile,
+                               NULL,
+                               &machine,
+                               &videotype,
+                               &semiwaves) != AUDIOTAP_OK){
+    error_message("File %s cannot be opened for reading", infile);
     return;
   }
-
-  if (fread(machine_string, 12, 1, fd) != 1){
-    error_message("%s does not seem to be a TAP file", infile);
-    return;
-  }
-
-  if (memcmp(machine_string, c64_machine_string, 12) &&
-      memcmp(machine_string, c16_machine_string, 12)){
-    error_message("%s does not seem to be a TAP file", infile);
-    return;
-  }
-
-  if (fread(&tap_version, 1, 1, fd) != 1 ||
-      fread(&machine, 1, 1, fd) != 1 ||
-      fread(&videotype, 1, 1, fd) != 1){
-    error_message("%s does not seem to be a TAP file", infile);
-    return;
-  }
-
-  if(machine != TAP_MACHINE_C64 &&
-     machine != TAP_MACHINE_VIC &&
-     machine != TAP_MACHINE_C16){
-    error_message("File %s has unsupported machine %u", infile, machine);
-    return;
-  }
-    
-  if(videotype != TAP_VIDEOTYPE_PAL &&
-     videotype != TAP_VIDEOTYPE_NTSC){
-    error_message("File %s has unsupported TAP videotype %u", infile, videotype);
-    return;
-  }
-    
-  if(tap_version != 0 
- && tap_version != 1
- && tap_version != 2
-    ){
-    error_message("File %s has unsupported TAP version %u", infile, tap_version);
-    return;
-  }
-
-  if(tap_version == 2)
-    trigger_type = TAP_TRIGGER_ON_BOTH_EDGES;
-    
-  if(fseek(fd, 0, SEEK_END) != 0){
-    error_message("Error in fseek: %s", strerror(errno));
-    return;
-  }
-
-  if ( (totlen = ftell(fd)) == -1){
-    error_message("Error in ftell: %s", strerror(errno));
-    return;
-  }
-
-  if(totlen < 20){
-    error_message("%s does not seem to be a TAP file", infile);
-    return;
-  }
-
-  if(fseek(fd, 20, SEEK_SET) != 0){
-    error_message("Error in fseek: %s", strerror(errno));
-    return;
-  }
-
-  if (tap2audio_open_with_machine(&audiotap, outfile, volume, freq, trigger_type, waveform, machine, videotype) != AUDIOTAP_OK){
-    if (outfile)
+  if (outfile){
+    if (tap2audio_open_to_wavfile(&audiotap, outfile, volume, freq, trigger_type, waveform, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
-    else
-      error_message("Sound card cannot be opened", infile);
+      audio2tap_close(audiotap_in);
+      return;
+    }
+  }
+  else if(tap2audio_open_to_soundcard(&audiotap, volume, freq, trigger_type, waveform, machine, videotype)){
+    error_message("Sound card cannot be opened", infile);
+    audio2tap_close(audiotap_in);
     return;
   }
 
+  trigger_type = semiwaves ? TAP_TRIGGER_ON_BOTH_EDGES :
+                 inverted  ? TAP_TRIGGER_ON_FALLING_EDGE :
+                             TAP_TRIGGER_ON_RISING_EDGE;
+  signal(SIGINT, tap2audio_interrupt);
+  totlen = audio2tap_get_total_len(audiotap_in);
   statusbar_initialize(totlen);
-  datalen = 20;
-  overflow_pulse = tap_version == 0 ? 256*8 : 0xFFFFFF;
 
-  status = AUDIOTAP_OK;
-  while(1){
-    if (datalen/10000 > old_datalen_div_10000){
-      old_datalen_div_10000 = datalen/10000;
+  while(status == AUDIOTAP_OK){
+    uint32_t pulse, raw_pulse;
+
+    if ((datalen++) % 10000 == 9999){
+      currlen = audio2tap_get_current_pos(audiotap_in);
       statusbar_update(datalen);
     }
-
-    pulse = 0;
-    do{
-      if (fread(&byte, 1, 1, fd) != 1){
-        end_of_file = 1;
-        break;
-      }
-      datalen++;
-      if (byte != 0)
-        this_pulse = byte * 8;
-      else if (tap_version == 0)
-        this_pulse = 256 * 8;
-      else{
-        if (fread(threebytes, 3, 1, fd) != 1){
-          end_of_file = 1;
-          break;
-        }
-        datalen += 3;
-        this_pulse = (threebytes[0]      ) +
-	                   (threebytes[1] <<  8) +
-	                   (threebytes[2] << 16);
-      }
-      pulse += this_pulse;
-    }while(this_pulse == overflow_pulse);
-    if (end_of_file)
-    {
+    status = audio2tap_get_pulses(audiotap_in, &pulse, &raw_pulse);
+    if (status != AUDIOTAP_OK)
       break;
-    }
+
     status = tap2audio_set_pulse(audiotap, pulse);
-    if (status != AUDIOTAP_OK) break;
   }
   statusbar_update(datalen);
   statusbar_exit();
   if (status == AUDIOTAP_INTERRUPTED)
     warning_message("Interrupted");
-  else if(status != AUDIOTAP_OK)
+  else if(status != AUDIOTAP_OK && status != AUDIOTAP_EOF)
     error_message("Something went wrong");
  
-  fclose(fd);
   tap2audio_close(audiotap);
+  audio2tap_close(audiotap_in);
 }
+

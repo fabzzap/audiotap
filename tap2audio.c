@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
-#include <signal.h>
 #include <sys/types.h>
 
 #include "audiotap.h"
@@ -65,8 +64,9 @@ int main(int argc, char** argv){
   struct audiotap_init_status status;
 
   status = audiotap_initialize();
-  if (status.audiofile_init_status != LIBRARY_OK &&
-      status.pablio_init_status != LIBRARY_OK){
+  if ((status.audiofile_init_status != LIBRARY_OK &&
+      status.portaudio_init_status != LIBRARY_OK)
+   || status.tapdecoder_init_status != LIBRARY_OK){
     printf("Failed to initialize audiotap library: both audiofile and pablio failed to load");
     exit(1);
   }
@@ -124,7 +124,7 @@ int main(int argc, char** argv){
   }
 
   if (argc == 1){
-    if (status.pablio_init_status != LIBRARY_OK){
+    if (status.portaudio_init_status != LIBRARY_OK){
       printf("Cannot read from sound card: pablio library missing or invalid\n");
       exit(1);
     }
@@ -136,7 +136,6 @@ int main(int argc, char** argv){
     }
   }
 
-  signal(SIGINT, sig_int);
 
   tap2audio(argv[0], argv[1], inverted, waveform, volume << 23, freq);
   exit(0);
