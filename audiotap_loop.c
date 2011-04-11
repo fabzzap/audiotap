@@ -6,7 +6,7 @@
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
- * audiotap_loop.c : core of both adio->tap and tap->audio
+ * audiotap_loop.c : core of both audio->tap and tap->audio
  * 
  * This file is shared between the audio->tap part and the tap->audio part
  * This file is part of Audiotap core processing files
