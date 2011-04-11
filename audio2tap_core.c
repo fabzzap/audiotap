@@ -12,24 +12,11 @@
  * This file is part of Audiotap core processing files
  */
 
-#include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <limits.h>
-#include <signal.h>
-#include <sys/types.h>
 #include "audiotap_callback.h"
 #include "audio2tap_core.h"
-
-static const char c64_machine_string[]="C64-TAPE-RAW";
-static const char c16_machine_string[]="C16-TAPE-RAW";
-
-static struct audiotap *audiotap_in = NULL;
-
-void audio2tap_interrupt(int ignored)
-{
-  audiotap_terminate(audiotap_in);
-}
+#include "audiotap_loop.h"
 
 void audio2tap(char *infile,
           char *outfile,
@@ -40,15 +27,8 @@ void audio2tap(char *infile,
           uint8_t videotype
 )
 {
-  FILE *fd;
-  enum audiotap_status ret = AUDIOTAP_OK;
-  const char *machine_string;
-  char buffer[4];
-  unsigned int datalen = 0, old_datalen_div_10000 = 0;
-  int totlen, currlen;
-  int32_t currloudness;
-  uint8_t machine;
-  struct audiotap *audiotap_out;
+  uint8_t machine, semiwaves;
+  struct audiotap *audiotap_in, *audiotap_out;
 
   if (tap_version > 1){
     error_message("TAP version %u is unsupported", infile);
@@ -76,8 +56,9 @@ void audio2tap(char *infile,
     if(audio2tap_open_from_file(&audiotap_in,
                                 infile,
                                 params,
-                                machine,
-                                videotype) != AUDIOTAP_OK){
+                                &machine,
+                                &videotype,
+                                &semiwaves) != AUDIOTAP_OK){
       error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", infile);
       return;
     }
@@ -99,46 +80,5 @@ void audio2tap(char *infile,
     return;
   }
 
-  if ( (totlen = audio2tap_get_total_len(audiotap_in)) != -1)
-    statusbar_initialize(totlen);
-  else
-    statusbar_initialize(INT_MAX);
-
-  signal(SIGINT, audio2tap_interrupt);
-
-  while(ret == AUDIOTAP_OK){
-    uint32_t pulse, raw_pulse;
-    if (datalen/10000 > old_datalen_div_10000){
-      old_datalen_div_10000 = datalen/10000;
-      currlen = audio2tap_get_current_pos(audiotap_in);
-      if (currlen != -1)
-        statusbar_update(currlen);
-      else{
-        currloudness=audio2tap_get_current_sound_level(audiotap_in);
-        if (currloudness != -1)
-          statusbar_update(currloudness);
-      }
-    }
-    ret=audio2tap_get_pulses(audiotap_in, &pulse, &raw_pulse);
-    if (ret!=AUDIOTAP_OK)
-      break;
-    ret=tap2audio_set_pulse(audiotap_out, pulse);
-  }
-    
-  currlen = audio2tap_get_current_pos(audiotap_in);
-  if (currlen != -1)
-    statusbar_update(currlen);
-  if (totlen  != -1)
-    statusbar_exit();
-
-  if(ret==AUDIOTAP_INTERRUPTED)
-    warning_message("Interrupted by user");
-  else if(ret!=AUDIOTAP_EOF)
-    error_message("Something went wrong");
-
-  signal(SIGINT, SIG_DFL);
-
-  audio2tap_close(audiotap_in);
-  tap2audio_close(audiotap_out);
+  audiotap_loop(audiotap_in, audiotap_out, audiotap_in);
 }
-

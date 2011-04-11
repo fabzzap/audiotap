@@ -13,7 +13,6 @@
  */
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,7 +55,7 @@ int main(int argc, char** argv){
   /* initial_threshold */ 20,
   /* inverted */ TAP_TRIGGER_ON_RISING_EDGE
   };
-  u_int32_t freq = 44100;
+  uint32_t freq = 44100;
   unsigned char tap_version = 1;
   struct option cmdline[]={
     {"help"              ,0,NULL,'h'},

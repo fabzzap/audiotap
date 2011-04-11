@@ -13,10 +13,11 @@
  */
 
 #include "tap_types.h"
+#include <stdint.h>
 
 void tap2audio(char *infile,
 	      char *outfile,
-	      uint8_t inverted,
+	      enum tap_trigger inverted,
 	      enum tapdec_waveform waveform,
 	      int32_t volume,
 	      int freq);

@@ -20,6 +20,7 @@
 #include <htmlhelp.h>
 #include "resource.h"
 #include "audiotap.h"
+#include "audiotap_loop.h"
 #include "tap2audio_core.h"
 #include "audio2tap_core.h"
 
@@ -98,7 +99,7 @@ LPARAM lParam
 	{
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDC_STOP){
-			audio2tap_interrupt();
+			audiotap_interrupt();
 			return 1;
 		}
 		return 0;
@@ -119,7 +120,7 @@ LPARAM lParam // second message parameter
 	case WM_INITDIALOG:
 		{
 			char *message;
-			switch (audiotap_status.pablio_init_status){
+			switch (audiotap_status.portaudio_init_status){
 			case LIBRARY_UNINIT:
 				message="Not initialized";
 				break;
@@ -165,12 +166,12 @@ LPARAM lParam // second message parameter
 }
 
 struct audiotap_advanced {
-	u_int32_t infreq;
-	u_int32_t min_duration;
-	u_int8_t  min_height;
+	uint32_t infreq;
+	uint32_t min_duration;
+	uint8_t  min_height;
 	long      tap_version;
-	u_int32_t outfreq;
-	u_int8_t  volume;
+	uint32_t outfreq;
+	uint8_t  volume;
 	int       clock;
 };
 
@@ -281,23 +282,22 @@ LPARAM lParam
 struct audio2tap_parameters {
 	char *input_filename;
 	char *output_filename;
-	u_int32_t freq;
-	u_int32_t min_duration;
-	u_int32_t min_height;
-	int inverted;
+  uint32_t freq;
+	struct tapdec_params tapdec_params;
 	unsigned char tap_version;
 	int clock;
+  uint8_t videotype;
 };
 
 DWORD WINAPI audio2tap_thread(LPVOID params){
-	audio2tap(((struct audio2tap_parameters*)params)->input_filename,
-		((struct audio2tap_parameters*)params)->output_filename,
-		((struct audio2tap_parameters*)params)->freq,
-		((struct audio2tap_parameters*)params)->min_duration,
-		((struct audio2tap_parameters*)params)->min_height,
-		((struct audio2tap_parameters*)params)->inverted,
-		((struct audio2tap_parameters*)params)->tap_version,
-		((struct audio2tap_parameters*)params)->clock);
+  struct audio2tap_parameters* p = (struct audio2tap_parameters*)params;
+	audio2tap(p->input_filename,
+		p->output_filename,
+    p->freq,
+		&p->tapdec_params,
+		p->tap_version,
+    p->clock,
+    p->videotype);
 	return 0;
 }
 
@@ -366,10 +366,10 @@ void save_to_tap(HWND hwnd){
 
 	params.input_filename = IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename : NULL;
 	params.output_filename = output_filename;
-	params.min_duration = (adv != NULL ? adv->min_duration : 1);
-	params.min_height = (adv != NULL ? adv->min_height : 12);
+	params.tapdec_params.min_duration = (adv != NULL ? adv->min_duration : 1);
+	params.tapdec_params.sensitivity = (adv != NULL ? adv->min_height : 12);
 	params.freq = (adv != NULL ? adv->infreq : 44100);
-	params.inverted = IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED;
+	params.tapdec_params.inverted = IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED;
 	params.tap_version = (adv != NULL ? (unsigned char)adv->tap_version : 1);
 	params.clock = (adv != NULL ? adv->clock : 0);
 
@@ -409,7 +409,7 @@ LPARAM lParam
 	{
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDC_STOP)
-			tap2audio_interrupt();
+			audiotap_interrupt();
 		return 1;
 	default:
 		return 0;
@@ -420,7 +420,8 @@ LPARAM lParam
 struct tap2audio_parameters {
 	char *infile;
 	char *outfile;
-	int inverted;
+	uint8_t inverted;
+  enum tapdec_waveform waveform;
 	int32_t volume;
 	int freq;
 };
@@ -429,6 +430,7 @@ DWORD WINAPI tap2audio_thread(LPVOID params){
 	tap2audio(((struct tap2audio_parameters*)params)->infile,
 		((struct tap2audio_parameters*)params)->outfile,
 		((struct tap2audio_parameters*)params)->inverted,
+    ((struct tap2audio_parameters*)params)->waveform,
 		((struct tap2audio_parameters*)params)->volume,
 		((struct tap2audio_parameters*)params)->freq);
 	return 0;
@@ -438,7 +440,7 @@ void read_from_tap(HWND hwnd){
 	OPENFILENAME file;
 	char input_filename[1024];
 	char output_filename[1024];
-    char* input_filename_base, *output_filename_base;
+  char* input_filename_base, *output_filename_base;
 	MSG msg;
 	struct tap2audio_parameters params;
 	DWORD thread_id;
@@ -621,14 +623,14 @@ LPARAM lParam // second message parameter
 		SetWindowLong(hwnd, GWL_USERDATA, lParam);
 
 		CheckRadioButton(hwnd,IDC_FROM_TAP,IDC_TO_TAP,IDC_FROM_TAP);
-		if (audiotap_status.pablio_init_status == LIBRARY_OK){
+		if (audiotap_status.portaudio_init_status == LIBRARY_OK){
 			CheckRadioButton(hwnd,IDC_TO_SOUND,IDC_TO_WAV,IDC_TO_SOUND);
 			CheckRadioButton(hwnd,IDC_FROM_SOUND,IDC_FROM_WAV,IDC_FROM_SOUND);
 			EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), TRUE);
 		}
 		if (audiotap_status.audiofile_init_status == LIBRARY_OK){
 			EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), TRUE);
-			if (audiotap_status.pablio_init_status != LIBRARY_OK){
+			if (audiotap_status.portaudio_init_status != LIBRARY_OK){
 				CheckRadioButton(hwnd,IDC_TO_SOUND,IDC_TO_WAV,IDC_TO_WAV);
 				CheckRadioButton(hwnd,IDC_FROM_SOUND,IDC_FROM_WAV,IDC_FROM_WAV);
 			}
@@ -646,7 +648,7 @@ LPARAM lParam // second message parameter
         EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_ADVANCED), TRUE);
         EnableWindow(GetDlgItem(hwnd,IDC_FROM_TAP_INVERTED), TRUE);
         EnableWindow(GetDlgItem(hwnd,IDC_TO_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
-        EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
+        EnableWindow(GetDlgItem(hwnd,IDC_TO_SOUND), audiotap_status.portaudio_init_status == LIBRARY_OK);
         return TRUE;
       }
     case IDC_TO_TAP:
@@ -658,7 +660,7 @@ LPARAM lParam // second message parameter
         EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_ADVANCED), TRUE);
         EnableWindow(GetDlgItem(hwnd,IDC_TO_TAP_INVERTED), TRUE);
         EnableWindow(GetDlgItem(hwnd,IDC_FROM_WAV), audiotap_status.audiofile_init_status == LIBRARY_OK);
-        EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), audiotap_status.pablio_init_status == LIBRARY_OK);
+        EnableWindow(GetDlgItem(hwnd,IDC_FROM_SOUND), audiotap_status.portaudio_init_status == LIBRARY_OK);
         return TRUE;
       }
     case IDOK:
@@ -714,11 +716,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	instance = hInstance;
 	audiotap_status = audiotap_initialize();
 	if (audiotap_status.audiofile_init_status != LIBRARY_OK &&
-		audiotap_status.pablio_init_status != LIBRARY_OK){
-		MessageBoxA(0,"Both audiofile.dll and pablio.dll are missing or improperly installed",
+		audiotap_status.portaudio_init_status != LIBRARY_OK){
+		MessageBoxA(0,"Both audiofile.dll and portaudio.dll are missing or improperly installed",
 			"Cannot start Audiotap",MB_ICONERROR);
 		return 0;
 	}
 
-	return DialogBoxParam(hInstance,MAKEINTRESOURCE(IDD_MAINWINDOW),NULL,dialog_control,(LPARAM)&adv);
+	DialogBoxParam(hInstance,MAKEINTRESOURCE(IDD_MAINWINDOW),NULL,dialog_control,(LPARAM)&adv);
+  return 0;
 }
