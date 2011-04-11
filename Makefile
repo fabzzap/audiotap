@@ -27,7 +27,7 @@ clean:
 
 audio2tap: audio2tap.o audio2tap_core.o
 tap2audio: tap2audio.o tap2audio_core.o
-audio2tap tap2audio: audiotap_callback.o 
+audio2tap tap2audio: audiotap_callback.o audiotap_loop.o
 audio2tap tap2audio: LDFLAGS=-laudiotap -L../libaudiotap
 
 docs/audiotap.chm: docs/audiotap-doc.hhp

@@ -9,7 +9,7 @@
  * audio2tap.c : main audio->tap program for the command-line version
  * 
  * This file belongs to the audio->tap part
- * This file is part of the command-line vesion of Audiotap
+ * This file is part of the command-line version of Audiotap
  */
 
 #include <fcntl.h>
@@ -19,8 +19,13 @@
 #include <string.h>
 #include <getopt.h>
 #include <malloc.h>
+#include <signal.h>
 
 #include "audio2tap_core.h"
+
+static void sig_int(int signum){
+  audiotap_interrupt();
+}
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
@@ -170,6 +175,7 @@ int main(int argc, char** argv){
     }
     infile=argv[1];
   }      
+  signal(SIGINT, sig_int);
 
   audio2tap(infile, outfile, freq, &params, tap_version, clock, videotype);
 

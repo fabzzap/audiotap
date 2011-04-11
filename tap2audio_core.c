@@ -16,6 +16,7 @@
 #include "audiotap.h"
 #include "audiotap_callback.h"
 #include "tap2audio_core.h"
+#include <stddef.h>
 
 void tap2audio(char *infile,
 	      char *outfile,
@@ -25,7 +26,6 @@ void tap2audio(char *infile,
 	      int freq)
 {
   uint8_t semiwaves, machine, videotype;
-  int totlen;
   struct audiotap *audiotap_in, *audiotap_out;
 
   if (audio2tap_open_from_file(&audiotap_in,
@@ -52,7 +52,6 @@ void tap2audio(char *infile,
     return;
   }
 
-  totlen = audio2tap_get_total_len(audiotap_in);
-  statusbar_initialize(totlen);
   audiotap_loop(audiotap_in, audiotap_out, audiotap_out);
 }
+

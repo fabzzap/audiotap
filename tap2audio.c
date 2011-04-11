@@ -9,19 +9,21 @@
  * tap2audio.c : main tap->audio program for the command-line version
  * 
  * This file belongs to the tap->audio part
- * This file is part of the command-line vesion of Audiotap
+ * This file is part of the command-line version of Audiotap
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <signal.h>
 #include <sys/types.h>
 
 #include "audiotap.h"
 #include "tap2audio_core.h"
+#include "audiotap_loop.h"
 
-void sig_int(int signum){
-	tap2audio_interrupt();
+static void sig_int(int signum){
+  audiotap_interrupt();
 }
 
 void help(){
@@ -136,6 +138,7 @@ int main(int argc, char** argv){
     }
   }
 
+  signal(SIGINT, sig_int);
 
   tap2audio(argv[0], argv[1], inverted, waveform, volume << 23, freq);
   exit(0);

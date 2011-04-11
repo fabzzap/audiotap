@@ -82,3 +82,4 @@ void audio2tap(char *infile,
 
   audiotap_loop(audiotap_in, audiotap_out, audiotap_in);
 }
+
