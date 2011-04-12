@@ -24,9 +24,9 @@
 #include "tap2audio_core.h"
 #include "audio2tap_core.h"
 
-struct audiotap_init_status audiotap_status;
-HINSTANCE instance;
-HWND status_window = NULL;
+static struct audiotap_init_status audiotap_status;
+static HINSTANCE instance;
+static HWND status_window = NULL;
 
 void warning_message(const char *format,...){
   char string[160];
@@ -50,7 +50,7 @@ void error_message(const char *format,...){
   va_end(va);
 }
 
-double statusbar_factor;
+static double statusbar_factor;
 
 void
 statusbar_update(int cursize)
@@ -721,6 +721,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			"Cannot start Audiotap",MB_ICONERROR);
 		return 0;
 	}
+
+  if (audiotap_status.tapdecoder_init_status != LIBRARY_OK &&
+    audiotap_status.tapencoder_init_status != LIBRARY_OK){
+      MessageBoxA(0,"Both tapencoder.dll and tapdecoder.dll are missing or improperly installed",
+        "Cannot start Audiotap",MB_ICONERROR);
+      return 0;
+  }
 
 	DialogBoxParam(hInstance,MAKEINTRESOURCE(IDD_MAINWINDOW),NULL,dialog_control,(LPARAM)&adv);
   return 0;
