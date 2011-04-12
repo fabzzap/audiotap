@@ -41,11 +41,11 @@ void warning_message(const char *format,...){
 }
 
 void error_message(const char *format,...){
-  char string[80];
+  char string[1024];
   va_list va;
 
   va_start(va, format);
-  vsnprintf(string, 80, format, va);
+  vsnprintf(string, sizeof(string), format, va);
   printf("Error: %s\n", string);
   va_end(va);
 }
