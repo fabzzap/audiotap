@@ -17,13 +17,14 @@
 #include "audiotap_callback.h"
 #include "audio2tap_core.h"
 #include "audiotap_loop.h"
+#include "audiotap.h"
 
 void audio2tap(char *infile,
           char *outfile,
           uint32_t freq,
-          struct tapdec_params *params,
-          unsigned char tap_version,
-          int clock,
+          struct tapenc_params *params,
+          uint8_t tap_version,
+          uint8_t clock,
           uint8_t videotype
 )
 {
@@ -52,7 +53,7 @@ void audio2tap(char *infile,
     break;
   }
 
-  if (infile){
+  if (infile && strlen(infile)){
     if(audio2tap_open_from_file(&audiotap_in,
                                 infile,
                                 params,

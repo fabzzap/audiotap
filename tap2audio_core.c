@@ -19,11 +19,9 @@
 #include <stddef.h>
 
 void tap2audio(char *infile,
-	      char *outfile,
-	      enum tap_trigger inverted,
-	      enum tapdec_waveform waveform,
-	      int32_t volume,
-	      int freq)
+	       char *outfile,
+	       struct tapdec_params *params,
+	       int freq)
 {
   uint8_t semiwaves, machine, videotype;
   struct audiotap *audiotap_in, *audiotap_out;
@@ -38,15 +36,15 @@ void tap2audio(char *infile,
     return;
   }
   if (semiwaves)
-    inverted = TAP_TRIGGER_ON_BOTH_EDGES;
-  if (outfile){
-    if (tap2audio_open_to_wavfile(&audiotap_out, outfile, volume, freq, inverted, waveform, machine, videotype) != AUDIOTAP_OK){
+    params->inverted = TAP_TRIGGER_ON_BOTH_EDGES;
+  if (outfile && strlen(outfile)){
+    if (tap2audio_open_to_wavfile(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
       audio2tap_close(audiotap_in);
       return;
     }
   }
-  else if(tap2audio_open_to_soundcard(&audiotap_out, volume, freq, inverted, waveform, machine, videotype)){
+  else if(tap2audio_open_to_soundcard(&audiotap_out, params, freq, machine, videotype)){
     error_message("Sound card cannot be opened", infile);
     audio2tap_close(audiotap_in);
     return;

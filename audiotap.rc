@@ -17,36 +17,23 @@
 #include "winuser.h"
 #include "winnt.h"
 
-IDD_MAINWINDOW DIALOG  0, 0, 186, 146
-STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+IDD_MAINWINDOW DIALOGEX 0, 0, 186, 146
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Audiotap"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,125,50,14,WS_GROUP
-    CONTROL         "Convert from a TAP file",IDC_FROM_TAP,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,89,10
-    CONTROL         "Create a TAP file",IDC_TO_TAP,"Button",
-                    BS_AUTORADIOBUTTON | WS_TABSTOP,7,60,69,10
-    CONTROL         "to a sound",IDC_TO_SOUND,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED | WS_GROUP | WS_TABSTOP,27,19,49,10
-    CONTROL         "to a WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED | WS_TABSTOP,27,33,57,10
-    CONTROL         "Inverted waveform",IDC_FROM_TAP_INVERTED,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,29,48,75,10
-    PUSHBUTTON      "Advanced options",IDC_FROM_TAP_ADVANCED,109,47,70,13,
-                    WS_GROUP
-    CONTROL         "from a sound",IDC_FROM_SOUND,"Button",
-                    BS_AUTORADIOBUTTON | WS_DISABLED | WS_GROUP | WS_TABSTOP,
-                    29,71,57,10
+    CONTROL         "Convert from a TAP file",IDC_FROM_TAP,"Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_GROUP | WS_TABSTOP,7,7,89,10
+    CONTROL         "Create a TAP file",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_TABSTOP,7,60,69,10
+    CONTROL         "to a sound",IDC_TO_SOUND,"Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_GROUP | WS_TABSTOP,27,19,49,10
+    CONTROL         "to a WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_TABSTOP,27,33,57,10
+    CONTROL         "Inverted waveform",IDC_FROM_TAP_INVERTED,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,29,48,75,10
+    PUSHBUTTON      "Advanced options",IDC_FROM_TAP_ADVANCED,109,47,70,13,WS_DISABLED | WS_GROUP
+    CONTROL         "from a sound",IDC_FROM_SOUND,"Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_GROUP | WS_TABSTOP,29,71,57,10
     CONTROL         "from an audio file (WAV or similar)",IDC_FROM_WAV,
-                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_TABSTOP,
-                    29,85,121,10
-    CONTROL         "Inverted waveform",IDC_TO_TAP_INVERTED,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,29,
-                    108,75,10
-    PUSHBUTTON      "Advanced options",IDC_TO_TAP_ADVANCED,109,107,70,13,
-                    WS_DISABLED | WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED | WS_TABSTOP,29,85,121,10
+    CONTROL         "Inverted waveform",IDC_TO_TAP_INVERTED,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,29,108,75,10
+    PUSHBUTTON      "Advanced options",IDC_TO_TAP_ADVANCED,109,107,70,13,WS_DISABLED | WS_GROUP
     PUSHBUTTON      "About",IDC_ABOUT,7,126,45,13
 END
 
@@ -58,75 +45,72 @@ BEGIN
     PUSHBUTTON      "Cancel",IDC_STOP,70,74,50,14
     LTEXT           "Origin",IDC_ORIGIN,7,17,172,11
     LTEXT           "Destination",IDC_DESTINATION,7,29,172,9
-    LTEXT           "Progress indication",IDC_WHAT_PROGRESSBAR_MEANS,7,45,60,
-                    8
-    CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",0x0,7,57,
-                    172,10
+    LTEXT           "Progress indication",IDC_WHAT_PROGRESSBAR_MEANS,7,45,60,8
+    CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",0x0,7,57,172,10
 END
 
-IDD_TO_TAP_ADVANCED DIALOGEX 0, 0, 186, 110
+IDD_TO_TAP_ADVANCED DIALOGEX 0, 0, 163, 147
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Audio->TAP advanced options"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,7,90,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,90,50,14
-    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_DURATION,147,9,32,12,
-                    ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_HEIGHT,147,30,32,12,
-                    ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_TO_TAP_ADVANCED_FREQ,147,52,32,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    LTEXT           "Minimum distance between a max and a min (in samples)",
-                    IDC_STATIC,7,7,136,17
-    LTEXT           "Sensitivity (0-100)",
-                    IDC_STATIC,7,30,137,21
-    LTEXT           "Input frequency (Hz) (only for conversions from sound card)",
-                    IDC_STATIC,7,54,133,17
-    LTEXT           "Use clock",IDC_STATIC,7,74,40,12,SS_CENTERIMAGE
-    COMBOBOX        IDC_CLOCKS,48,74,131,80,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,0,133,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,113,133,50,14
+    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_DURATION,131,9,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TO_TAP_ADVANCED_MIN_HEIGHT,131,30,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TO_TAP_ADVANCED_FREQ,131,55,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Minimum distance between a max and a min (in samples)",IDC_STATIC,7,7,110,17
+    LTEXT           "Sensitivity (0-100)",IDC_STATIC,7,30,106,21
+    LTEXT           "Input frequency (Hz) (only for conversions from sound card)",IDC_STATIC,7,54,111,17
+    LTEXT           "Machine",IDC_STATIC,1,103,40,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_CLOCKS,39,103,118,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "PAL",IDC_VIDEOTYPE_PAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,71,118,35,10
+    CONTROL         "NTSC",IDC_VIDEOTYPE_NTSC,"Button",BS_AUTORADIOBUTTON,110,118,47,10
+    LTEXT           "Video type",IDC_STATIC,1,118,51,13
+    EDITTEXT        IDC_INITIAL_THRESHOLD,131,82,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Initial threshold (0-255)",IDC_STATIC,7,81,111,17
 END
 
-IDD_FROM_TAP_ADVANCED DIALOG  0, 0, 186, 58
+IDD_FROM_TAP_ADVANCED DIALOGEX 0, 0, 186, 86
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TAP->audio advanced options"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,7,37,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,37,50,14
-    EDITTEXT        IDC_FROM_TAP_ADVANCED_VOLUME,147,7,32,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    EDITTEXT        IDC_FROM_TAP_ADVANCED_FREQ,147,22,32,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,7,63,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,63,50,14
+    EDITTEXT        IDC_FROM_TAP_ADVANCED_VOLUME,147,7,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_FROM_TAP_ADVANCED_FREQ,147,22,32,12,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Volume (1-255)",IDC_STATIC,7,7,137,12
     LTEXT           "Output frequency (Hz)",IDC_STATIC,7,23,133,11
+    COMBOBOX        IDC_WAVEFORM,119,39,60,58,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Waveform",IDC_STATIC,7,39,108,11
 END
 
-IDD_ABOUT DIALOG  0, 0, 148, 121
+IDD_ABOUT DIALOGEX 0, 0, 173, 182
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "About Audiotap"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,48,100,50,14
-    CTEXT           "Audiotap 1.4",IDC_STATIC,7,7,134,8
-    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2008",IDC_STATIC,7,18,
-                    133,8
-    CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
-                    IDC_STATIC,7,28,134,21
-    RTEXT           "portaudio.dll status",IDC_STATIC,7,50,57,8
-    RTEXT           "audiofile.dll status",IDC_STATIC,7,80,57,8
-    LTEXT           "",IDC_AUDIOFILE_STATUS,68,80,73,19
-    LTEXT           "",IDC_PABLIO_STATUS,70,51,71,25
+    DEFPUSHBUTTON   "OK",IDOK,45,161,50,14
+    CTEXT           "Audiotap 1.5",IDC_STATIC,7,7,134,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2011",IDC_STATIC,7,18,133,8
+    CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",IDC_STATIC,7,28,134,21
+    RTEXT           "portaudio.dll status",IDC_STATIC,4,50,75,8
+    RTEXT           "audiofile.dll status",IDC_STATIC,7,80,68,8
+    LTEXT           "",IDC_AUDIOFILE_STATUS,81,79,61,19
+    LTEXT           "",IDC_PABLIO_STATUS,86,46,63,25
+    RTEXT           "tapencoder.dll status",IDC_STATIC,6,97,70,8
+    RTEXT           "tapdecoder.dll status",IDC_STATIC,6,127,72,8
+    LTEXT           "",IDC_TAPDECODER_STATUS,79,129,59,19
+    LTEXT           "",IDC_TAPENCODER_STATUS,78,98,71,25
 END
 
-IDD_CHOOSE_TAP_VERSION DIALOG  0, 0, 177, 33
+IDD_CHOOSE_TAP_VERSION DIALOGEX 0, 0, 177, 33
 STYLE DS_SETFONT | WS_CHILD | WS_CLIPSIBLINGS
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT           "TAP version",IDC_STATIC,7,11,42,8
-    COMBOBOX        IDC_CHOOSE_TAP_VERSION,63,7,107,32,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CHOOSE_TAP_VERSION,63,7,107,32,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDI_ICON                ICON                    "audiotap.ico"

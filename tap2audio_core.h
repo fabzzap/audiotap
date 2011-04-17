@@ -12,13 +12,12 @@
  * This file is part of Audiotap core files
  */
 
-#include "tap_types.h"
 #include <stdint.h>
+
+struct tapdec_params;
 
 void tap2audio(char *infile,
 	      char *outfile,
-	      enum tap_trigger inverted,
-	      enum tapdec_waveform waveform,
-	      int32_t volume,
-	      int freq);
+	      struct tapdec_params *params,
+	      uint32_t freq);
 

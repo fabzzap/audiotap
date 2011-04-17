@@ -13,13 +13,15 @@
  * This file is part of Audiotap core files
  */
 
-#include "audiotap.h"
+#include <stdint.h>
+
+struct tapenc_params;
 
 void audio2tap(char *infile,
           char *outfile,
           uint32_t freq,
-          struct tapdec_params *params,
-          unsigned char tap_version,
-          int clock,
+          struct tapenc_params *params,
+          uint8_t tap_version,
+          uint8_t clock,
           uint8_t videotype);
 
