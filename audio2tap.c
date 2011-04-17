@@ -22,6 +22,7 @@
 #include <signal.h>
 
 #include "audio2tap_core.h"
+#include "audiotap.h"
 
 static void sig_int(int signum){
   audiotap_interrupt();
@@ -54,7 +55,7 @@ void version(){
    
 int main(int argc, char** argv){
   struct audiotap_init_status status;
-  struct tapdec_params params = {
+  struct tapenc_params params = {
   /* min_duration */ 0,
   /* sensitivity */ 12,
   /* initial_threshold */ 20,
@@ -181,4 +182,3 @@ int main(int argc, char** argv){
 
   exit(0);
 }
-

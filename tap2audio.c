@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/types.h>
 
 #include "audiotap.h"
@@ -40,7 +41,7 @@ void help(){
 }
 
 void version(){
-  printf("tap2audio (part of Audiotap) version 1.4\n");
+  printf("tap2audio (part of Audiotap) version 1.5\n");
   printf("(C) by Fabrizio Gennari, 2003-2008\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
@@ -49,9 +50,7 @@ void version(){
 }
    
 int main(int argc, char** argv){
-  uint8_t inverted = 0;
-  enum tapdec_waveform waveform = TAPDEC_SQUARE;
-  int volume = 254;
+  struct tapdec_params params = {254, TAP_TRIGGER_ON_RISING_EDGE, TAPDEC_SQUARE};
   int freq = 44100;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
@@ -76,8 +75,8 @@ int main(int argc, char** argv){
   while( (option=getopt_long(argc,argv,"v:f:ihVw:",cmdline,NULL)) != -1){
     switch(option){
     case 'v':
-      volume=atoi(optarg);
-      if (volume < 1 || volume > 255){
+      params.volume=atoi(optarg);
+      if (params.volume < 1 || params.volume > 255){
         printf("Volume out of range 1-255\n");
         exit(1);
       };
@@ -86,7 +85,7 @@ int main(int argc, char** argv){
       freq=atoi(optarg);
       break;
     case 'i':
-      inverted=1;
+      params.inverted=1;
       break;
     case 'h':
       help();
@@ -96,11 +95,11 @@ int main(int argc, char** argv){
       exit(0);
     case 'w':
       if(!strcmp(optarg,"square"))
-        waveform = TAPDEC_SQUARE;
+        params.waveform = TAPDEC_SQUARE;
       else if(!strcmp(optarg,"sine"))
-        waveform = TAPDEC_SINE;
+        params.waveform = TAPDEC_SINE;
       else if(!strcmp(optarg,"triangle"))
-        waveform = TAPDEC_TRIANGLE;
+        params.waveform = TAPDEC_TRIANGLE;
       else{
         printf("Wrong argument to option -c\n");
         exit(1);
@@ -140,7 +139,7 @@ int main(int argc, char** argv){
 
   signal(SIGINT, sig_int);
 
-  tap2audio(argv[0], argv[1], inverted, waveform, volume << 23, freq);
+  tap2audio(argv[0], argv[1], &params, freq);
   exit(0);
 }
 
