@@ -17,11 +17,12 @@
 #include "audiotap_callback.h"
 #include "tap2audio_core.h"
 #include <stddef.h>
+#include <string.h>
 
 void tap2audio(char *infile,
 	       char *outfile,
 	       struct tapdec_params *params,
-	       int freq)
+	       uint32_t freq)
 {
   uint8_t semiwaves, machine, videotype;
   struct audiotap *audiotap_in, *audiotap_out;

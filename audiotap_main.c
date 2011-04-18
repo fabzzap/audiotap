@@ -264,8 +264,10 @@ LPARAM lParam
     if (notify->hdr.code == CDN_FILEOK){
       HWND main_window = GetParent(GetParent(hdlg));
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(main_window, GWL_USERDATA);
-      if (adv != NULL)
-        adv->tap_version = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
+      if (adv != NULL){
+        LRESULT tap_result = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
+        adv->tap_version = tap_result == 0 ? 0 : 1;
+      }
     }
   }
   return 0;
@@ -550,7 +552,7 @@ LPARAM lParam // second message parameter
     if (LOWORD(wParam) == IDOK){
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(hwnd),GWL_USERDATA);
       BOOL success;
-      int waveform_result;
+      LRESULT waveform_result;
       adv->tapdec_params.volume  = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_VOLUME,&success,FALSE);
       if (!success)
         adv->tapdec_params.volume = 254;
