@@ -17,11 +17,18 @@
 
 struct tapenc_params;
 
+enum machines {
+  MACHINE_C64,
+  MACHINE_VIC20,
+  MACHINE_C16,
+  MACHINE_C16_SEMIWAVES
+};
+
 void audio2tap(char *infile,
           char *outfile,
           uint32_t freq,
           struct tapenc_params *params,
           uint8_t tap_version,
-          uint8_t clock,
+          enum machines clock,
           uint8_t videotype);
 

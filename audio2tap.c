@@ -23,6 +23,7 @@
 
 #include "audio2tap_core.h"
 #include "audiotap.h"
+#include "audiotap_loop.h"
 
 static void sig_int(int signum){
   audiotap_interrupt();
@@ -62,7 +63,7 @@ int main(int argc, char** argv){
   /* inverted */ TAP_TRIGGER_ON_RISING_EDGE
   };
   uint32_t freq = 44100;
-  unsigned char tap_version = 1;
+  uint8_t tap_version = 1;
   struct option cmdline[]={
     {"help"              ,0,NULL,'h'},
     {"version"           ,0,NULL,'V'},
@@ -78,7 +79,7 @@ int main(int argc, char** argv){
   };
   char *infile, *outfile;
   int option;
-  int clock=0;
+  enum machines clock = MACHINE_C64;
   uint8_t videotype = TAP_VIDEOTYPE_PAL;
 
   status = audiotap_initialize();
@@ -93,13 +94,13 @@ int main(int argc, char** argv){
     switch(option){
     case 'c':
       if(!strcmp(optarg,"c64"))
-        clock=0;
+        clock = MACHINE_C64;
       else if(!strcmp(optarg,"vic"))
-        clock=1;
+        clock = MACHINE_VIC20;
       else if(!strcmp(optarg,"c16"))
-        clock=2;
+        clock = MACHINE_C16;
       else if(!strcmp(optarg,"c16semi"))
-        clock=3;
+        clock = MACHINE_C16_SEMIWAVES;
       else{
         printf("Wrong argument to option -c\n");
         exit(1);

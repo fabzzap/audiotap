@@ -160,7 +160,7 @@ struct audiotap_advanced {
   char input_filename[1024];
   char output_filename[1024];
   uint32_t freq;
-  uint8_t clock;
+  enum machines clock;
   uint8_t videotype;
   uint8_t tap_version;
   struct tapenc_params tapenc_params;
@@ -259,12 +259,11 @@ LPARAM lParam
       default:
         ;
       }
-
     }
     if (notify->hdr.code == CDN_FILEOK){
       HWND main_window = GetParent(GetParent(hdlg));
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(main_window, GWL_USERDATA);
-      if (adv != NULL){
+      if (adv != NULL && adv->clock != MACHINE_C16_SEMIWAVES){
         LRESULT tap_result = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
         adv->tap_version = tap_result == 0 ? 0 : 1;
       }
@@ -318,9 +317,11 @@ void save_to_tap(HWND hwnd){
   file.lpstrFilter ="TAP file (*.tap)\0*.tap\0All files\0*.*\0\0";
   file.lpstrTitle = "Choose the TAP file to be created";
   file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
-    OFN_ENABLETEMPLATE | OFN_ENABLEHOOK |
-    OFN_OVERWRITEPROMPT;
-  file.lpTemplateName = MAKEINTRESOURCE(IDD_CHOOSE_TAP_VERSION);
+    OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
+  if (adv->clock != MACHINE_C16_SEMIWAVES){
+    file.Flags |= OFN_ENABLETEMPLATE;
+    file.lpTemplateName = MAKEINTRESOURCE(IDD_CHOOSE_TAP_VERSION);
+  }
   file.lpstrFile = adv->output_filename;
   file.hInstance = instance;
   file.lpfnHook = tap_save_hook_proc;
@@ -488,6 +489,8 @@ LPARAM lParam // second message parameter
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20");
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16");
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16 with semiwaves");
+      /* The following needs that CB_ADDSTRING in IDC_CLOCKS is called
+         in the same order as in enum machines */
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,adv->clock,0);
       if(adv->videotype == TAP_VIDEOTYPE_PAL)
         CheckRadioButton(hwnd,IDC_VIDEOTYPE_PAL,IDC_VIDEOTYPE_NTSC,IDC_VIDEOTYPE_PAL);
@@ -513,11 +516,22 @@ LPARAM lParam // second message parameter
       if (!success)
         adv->tapenc_params.min_duration = 20;
       clock_result = SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_GETCURSEL,0,0);
-      if (clock_result == CB_ERR || clock_result < 0 || clock_result > 4)
-        adv->clock = 0;
-      else
-        adv->clock = (uint8_t)clock_result;
-      EnableWindow(GetDlgItem(GetParent(hwnd),IDC_TO_TAP_INVERTED),adv->clock!=3);
+      switch (clock_result){
+      case 0:
+      default:
+        adv->clock = MACHINE_C64;
+        break;
+      case 1:
+        adv->clock = MACHINE_VIC20;
+        break;
+      case 2:
+        adv->clock = MACHINE_C16;
+        break;
+      case 3:
+        adv->clock = MACHINE_C16_SEMIWAVES;
+        break;
+      }
+      EnableWindow(GetDlgItem(GetParent(hwnd),IDC_TO_TAP_INVERTED),adv->clock != MACHINE_C16_SEMIWAVES);
       EndDialog(hwnd,0);
     }
     if (LOWORD(wParam) == IDCANCEL){

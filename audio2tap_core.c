@@ -24,7 +24,7 @@ void audio2tap(char *infile,
           uint32_t freq,
           struct tapenc_params *params,
           uint8_t tap_version,
-          uint8_t clock,
+          enum machines clock,
           uint8_t videotype
 )
 {
@@ -40,13 +40,13 @@ void audio2tap(char *infile,
   default:
     machine=TAP_MACHINE_C64;
     break;
-  case 1:
+  case MACHINE_VIC20:
     machine=TAP_MACHINE_VIC;
     break;
-  case 2:
+  case MACHINE_C16:
     machine=TAP_MACHINE_C16;
     break;
-  case 3:
+  case MACHINE_C16_SEMIWAVES:
     machine=TAP_MACHINE_C16;
     params->inverted = TAP_TRIGGER_ON_BOTH_EDGES;
     tap_version = 2;
@@ -83,4 +83,3 @@ void audio2tap(char *infile,
 
   audiotap_loop(audiotap_in, audiotap_out, audiotap_in);
 }
-
