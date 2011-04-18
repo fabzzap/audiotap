@@ -531,9 +531,14 @@ LPARAM lParam // second message parameter
         adv->clock = MACHINE_C16_SEMIWAVES;
         break;
       }
+      if (IsDlgButtonChecked(hwnd, IDC_VIDEOTYPE_PAL) == BST_CHECKED)
+        adv->videotype = TAP_VIDEOTYPE_PAL;
+      else
+        adv->videotype = TAP_VIDEOTYPE_NTSC;
       EnableWindow(GetDlgItem(GetParent(hwnd),IDC_TO_TAP_INVERTED),adv->clock != MACHINE_C16_SEMIWAVES);
       EndDialog(hwnd,0);
     }
+
     if (LOWORD(wParam) == IDCANCEL){
       EndDialog(hwnd,0);
     }
