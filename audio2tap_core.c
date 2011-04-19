@@ -28,7 +28,7 @@ void audio2tap(char *infile,
           uint8_t videotype
 )
 {
-  uint8_t machine, semiwaves;
+  uint8_t machine;
   struct audiotap *audiotap_in, *audiotap_out;
 
   if (tap_version > 1){
@@ -59,7 +59,7 @@ void audio2tap(char *infile,
                                 params,
                                 &machine,
                                 &videotype,
-                                &semiwaves) != AUDIOTAP_OK){
+                                NULL) != AUDIOTAP_OK){
       error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", infile);
       return;
     }
