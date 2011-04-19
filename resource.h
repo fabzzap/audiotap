@@ -15,10 +15,10 @@
 
 #define IDD_MAINWINDOW                  101
 #define IDD_CHOOSE_TAP_VERSION          102
-#define IDD_STATUS                      104
-#define IDD_TO_TAP_ADVANCED             105
-#define IDD_FROM_TAP_ADVANCED           106
-#define IDD_ABOUT                       107
+#define IDD_STATUS                      103
+#define IDD_TO_TAP_ADVANCED             104
+#define IDD_FROM_TAP_ADVANCED           105
+#define IDD_ABOUT                       106
 #define IDC_FROM_TAP                    1000
 #define IDC_TO_TAP                      1001
 #define IDC_TO_SOUND                    1002
