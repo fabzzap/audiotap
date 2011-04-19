@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
-#include <malloc.h>
 #include <signal.h>
 
 #include "audio2tap_core.h"

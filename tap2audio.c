@@ -76,8 +76,8 @@ int main(int argc, char** argv){
     switch(option){
     case 'v':
       params.volume=atoi(optarg);
-      if (params.volume < 1 || params.volume > 255){
-        printf("Volume out of range 1-255\n");
+      if (params.volume < 1){
+        printf("Volume too low\n");
         exit(1);
       };
       break;
