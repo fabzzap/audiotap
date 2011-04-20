@@ -575,20 +575,20 @@ LPARAM lParam // second message parameter
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(hwnd),GWL_USERDATA);
       BOOL success;
       LRESULT waveform_result;
-      adv->tapdec_params.volume  = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_VOLUME,&success,FALSE);
+      adv->tapdec_params.volume = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_VOLUME,&success,FALSE);
       if (!success)
         adv->tapdec_params.volume = 254;
-      adv->freq = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,&success,FALSE);
+      adv->freq                 = GetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,&success,FALSE);
       if (!success)
         adv->freq = 44100;
       waveform_result = SendMessage(GetDlgItem(hwnd,IDC_WAVEFORM),CB_GETCURSEL,0,0);
       switch(waveform_result){
       case 0:
-      default:
-        adv->tapdec_params.waveform = TAPDEC_SQUARE;
+        adv->tapdec_params.waveform = TAPDEC_TRIANGLE;
         break;
       case 1:
-        adv->tapdec_params.waveform = TAPDEC_TRIANGLE;
+      default:
+        adv->tapdec_params.waveform = TAPDEC_SQUARE;
         break;
       case 2:
         adv->tapdec_params.waveform = TAPDEC_SINE;
