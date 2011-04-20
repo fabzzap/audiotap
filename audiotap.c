@@ -563,10 +563,11 @@ LPARAM lParam // second message parameter
       struct audiotap_advanced *adv = (struct audiotap_advanced *)lParam;
       SetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,adv->freq,FALSE);
       SetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_VOLUME,adv->tapdec_params.volume ,FALSE);
-      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Square");
       SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Triangle");
+      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Square");
       SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Sine");
-      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_SETCURSEL, (WPARAM)0, 0);
+      /* The following needs that CB_ADDSTRING are called in the same order as in enum tapdec_waveform */
+      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_SETCURSEL, (WPARAM)adv->tapdec_params.waveform, 0);
       return 1;
     }
   case WM_COMMAND:
