@@ -9,7 +9,8 @@
 least <i>n</i> samples after the previous minimum, and vice versa, to be considered valid. Otherwise,
 the maximum and the following minimum (or vice versa) will be ignored. This can help
 reduce the probability of having wrong data coming from noisy tapes. However, if this
-value is too high, real triggers could be ignored. Default is 0.<br>
+value is too high, real triggers could be ignored. Default is 0.
+</li>
 <li><b>Sensitivity (0-100)</b>: with sensitivity 0, maximums and minimums are ignored in case they
 come before the trigger has fired. There can be cases, however, in which such maximums and minimums
 have to be considered. If the sensitivity is > 0 but low, maximums a little below the trigger level
@@ -17,19 +18,21 @@ and minimums a little above the trigger lever will be considered as well. As the
 more maximums and minimums will be considered. If the sensitivity is 100, all maximums and minimums
 will be considered. It is only recommended to use high values of sensitivity with bad tapes, in
 presence of sudden sound level changes, otherwise beter keep this low.<br>
-<li><b>Input frequency</b>: Frequency of sound coming from sound card. As long as the frequency
-is supported by the sound card, the higher, the better. 44100 Hz is strongly recommended,
-because it is almost universally supported. This parameter is ignored if the input is an
-audio file: in those cases, frequency will be taken form the file itself.<br>
+</li>
+<li><b>Input frequency</b>: Frequency of sound coming from sound card. As long
+as the frequency is supported by the sound card, the higher, the better. 44100
+Hz is the default, because it is almost universally supported. However, modern
+sound cards easily reach 96000 Hz, therefore use that if yours supports it.<br>
+This parameter is ignored if the input is an audio file: in those cases,
+frequency will be taken form the file itself.<br>
+</li>
 <li><b>Machine</b>: Tell whether the tape being recorded was intended for a C64, a VIC20 or a C16/Plus 4.
 This will adjust to the CPU frequency of the relevant machine. For C16, there's the option of recording
 semiwaves instead of full waves.
+</li>
 <li><b>Video type</b>: Tell whether the tape being recorded was intended for a PAL or an NTSC machine.
 This will adjust to the CPU frequency of the relevant machine.
-</ul>
-</BODY>
-</HTML>
-
+</li>
 </ul>
 </BODY>
 </HTML>
