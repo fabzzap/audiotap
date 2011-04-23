@@ -4,21 +4,16 @@ tap2audio \- convert a .TAP file to a Commodore 64 tape
 .SH SYNOPSIS
 tap2audio -h|-v
 .P
-tap2audio [-i] [-f <freq>] [-v <vol>] input_TAP_file_name [output_WAV_file_name]
+tap2audio [-i] [-f <freq>] [-v <vol>] [-w <triangle|square|sine>] input_TAP_file_name [output_WAV_file_name]
 .SH DESCRIPTION
 .I tap2audio
-reads the input .TAP file and converts it to a Commodore 64 tape. The output
+reads the input .TAP or .DMP file and converts it to a Commodore 64 tape. The output
 format can be a sound (this is the default) or a .WAV file (if the name of
-a WAV file is specified as second argument)
-Conversion to sound card requires
-.I
-libpablio.so
-and
-\fIlibportaudio.so\fR.
-Conversion to WAV file requires
-.I
-libaudiofile.so
-(version 0.2.3 recommended).
+a WAV file is specified as second argument).
+\fIlibtapdecoder.so\fR is required.
+Conversion to sound card requires \fIlibportaudio.so.2\fR.
+Conversion to WAV file requires \fIlibaudiofile.so.0\fR.
+
 .SH OPTIONS
 .TP
 .B -f <freq>
@@ -35,20 +30,18 @@ C64 will not be able to recognize it. If an inverted waveform is played back
 with such a soundcard, the soundcard will invert it again, turning it into a
 normal waveform, so a C64 will recognize it. If a waveform generated without the
 .B -i
-option is not loaded by the C64, try enabling this option.
+option is not loaded by the C64, try enabling this option. This option is ignored
+if the input is a TAP version 2 (C16 TAP file with semiwave recording).
 .TP
-.B
--v <vol>
+.B -v <vol>
 Set volume of output waveform to <vol> (1-255). Ignored if output is a TAP
 file.
 .TP
 .B -V
 Show version and copyright info and exit successfully
 .TP
-.BI \-w " output\_WAV\_file\_name"
-Output is WAV file
-.I
-output\_WAV\_file\_name
+.B -w <triangle|square|sine>
+Use triangular/square/sinusoidal waveform (default: square)
 .SH AUTHOR
 Fabrizio Gennari (fabrizio.ge@tiscalinet.it)
 .SH REFERENCES

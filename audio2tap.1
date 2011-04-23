@@ -4,48 +4,45 @@ audio2tap \- Create .TAP files from Commodore 64 tapes
 .SH SYNOPSIS
 audio2tap -h|-v
 .P
-audio2tap [-i] [-f <freq>] [-d <min duration>] [-H <min height>] [-i] <output TAP file> [input audio or TAP file]
+audio2tap [-i] [-f <freq>] [-d <min duration>] [-H <min height>] [-0] [-c <c64|c16|c16semi|vic20>] [-n] [-t <initial_threshold>] <output TAP file> [input audio file]
 
 .SH DESCRIPTION
 .I audio2tap
 converts Commodore 64 tapes files to .TAP files.
 The tape can be either converted directly from the sound card (by default) or
 from an audio file (.WAV or similar, if an input file name is
-specified as second argument). Conversion from sound card requires
-.I
-libpablio.so
-and
-\fIlibportaudio.so\fR.
-Conversion from WAV file requires
-.I
-libaudiofile.so
-(version 0.2.3 recommended).
+specified as second argument).
+\fIlibtapencoder.so\fR is required. Conversion from sound card requires
+\fIlibportaudio.so.2\fR. Conversion from WAV file requires \fIlibaudiofile.so.0\fR.
 .P
 .SH OPTIONS
+.TP
+.B -h
+Show a help message and exit successfully.
+.TP
+.B -v
+Show version and copyright info and exit successfully
 .TP
 .B -d <min duration>
 When decoding a sound to pulses, pulses which last less that <min duration>
 samples are ignored. This option is useful for noisy sounds, in order to
-avoid false triggers. The default value is 3. This option is ignored if the
-input is a TAP file.
+avoid false triggers. The default value is 0.
 .TP
 .B -f <freq>
 Sets the sampling frequency of the input sound to <freq> Hz. The default is
 44100. This is only significant if the input is from sound card. If the input
 is from audio file, this option is ignored and the frequency will be read
-from the file itself. If the input is a TAP file, this option is ignored.
+from the file itself. As long as the frequency is supported by the sound card,
+Modern sound cards easily reach 96000 Hz, therefore use that if yours supports it.
 .TP
-.B -h
-Show a help message and exit successfully.
-.TP
-.TP
-.B -H <min height>
-When decoding a sound to pulses, maximums or minimums in the waveform whose
-level is less than <min height> higher than the previous minimum/lower than
-the previous maximum are ignored (the difference between the absolute max and
-the absolute min is 256, therefore <min height> must be in the range 0-255).
-This option is useful for noisy sounds, in order to avoid false triggers. The
-default value is 10. This option is ignored if the input is a TAP file.
+.B -H <sensitivity>
+With sensitivity 0, maximums and minimums are ignored in case they
+come before the trigger has fired. There can be cases, however, in which such maximums and minimums
+have to be considered. If the sensitivity is > 0 but low, maximums a little below the trigger level
+and minimums a little above the trigger lever will be considered as well. As the sensitivity increases,
+more maximums and minimums will be considered. If the sensitivity is 100, all maximums and minimums
+will be considered. It is only recommended to use high values of sensitivity with bad tapes, in
+presence of sudden sound level changes, otherwise beter keep this low. Default is 12.
 .TP
 .B -i
 Tell
@@ -59,13 +56,21 @@ must be run with the
 .B -i
 option in order to detect the files. If you get no results without the
 .B -i
-option, try enabling it.
+option, try enabling it. The option is ignored if the machine is C16 with semiwaves.
 .TP
 .B -0
 Create a version-0 TAP file. By default, a version-1 TAP file is created.
 .TP
-.B -v
-Show version and copyright info and exit successfully
+.B -c <c64|c16|c16semi|vic20>
+Use timing for C64, C16 or VIC20. \fBc16semi\fR also enables semiwave recording.
+Default is \fBc64\fR.
+.TP
+.B -n
+use NTSC timing
+.TP
+.B -t <initial_threshold>
+Ignore pulses at the beginning of the file until the amplitude of the signal exceeds
+a range centred around \fB<initial_threshold>\fR. Possible values: 0-255. Default: 20.
 .SH AUTHOR
 Fabrizio Gennari (fabrizio.ge@tiscalinet.it)
 .SH REFERENCES
