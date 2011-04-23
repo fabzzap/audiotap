@@ -37,7 +37,7 @@ void warning_message(const char *format,...){
   va_start(va, format);
     if (_vsnprintf(string, 160, format, va) == -1)
     string[159]=0;
-  MessageBoxA(0, string, "Audiotap warning", MB_ICONWARNING | MB_SETFOREGROUND);
+  MessageBoxA(status_window, string, "Audiotap warning", MB_ICONWARNING | MB_SETFOREGROUND);
   va_end(va);
 }
 
@@ -48,7 +48,7 @@ void error_message(const char *format,...){
   va_start(va, format);
   if (_vsnprintf(string, 160, format, va) == -1)
     string[159]=0;
-  MessageBoxA(0, string, "Audiotap error", MB_ICONERROR | MB_SETFOREGROUND);
+  MessageBoxA(status_window, string, "Audiotap error", MB_ICONERROR | MB_SETFOREGROUND);
   va_end(va);
 }
 
@@ -418,7 +418,7 @@ void read_from_tap(HWND hwnd){
   file.hwndOwner = hwnd;
   file.nMaxFile = sizeof(adv->input_filename);
 
-  file.lpstrFilter ="TAP files (*.tap)\0*.tap\0All files\0*.*\0\0";
+  file.lpstrFilter ="TAP files (*.tap)\0*.tap\0DMP files (*.dmp)\0*.dmp\0All files\0*.*\0\0";
   file.lpstrDefExt = "tap";
   file.nFilterIndex = 1;
   file.lpstrTitle = "Choose the TAP file to be converted to WAV";
