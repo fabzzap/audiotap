@@ -624,6 +624,7 @@ LPARAM lParam // second message parameter
           0,0,
           SWP_NOSIZE | SWP_NOZORDER);
       }
+      SendMessage(hwnd, WM_SETICON, 1, (LPARAM)LoadIconA(instance, (LPCSTR)IDI_ICON));
     }
     SetWindowLong(hwnd, GWL_USERDATA, lParam);
 

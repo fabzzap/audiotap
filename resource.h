@@ -19,6 +19,7 @@
 #define IDD_TO_TAP_ADVANCED             104
 #define IDD_FROM_TAP_ADVANCED           105
 #define IDD_ABOUT                       106
+#define IDI_ICON                        107
 #define IDC_FROM_TAP                    1000
 #define IDC_TO_TAP                      1001
 #define IDC_TO_SOUND                    1002
