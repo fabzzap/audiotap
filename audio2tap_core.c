@@ -24,37 +24,20 @@ void audio2tap(char *infile,
           uint32_t freq,
           struct tapenc_params *params,
           uint8_t tap_version,
-          enum machines clock,
+          uint8_t machine,
           uint8_t videotype
 )
 {
-  uint8_t machine;
   struct audiotap *audiotap_in, *audiotap_out;
 
-  if (tap_version > 1){
+  if (tap_version > 2){
     error_message("TAP version %u is unsupported", infile);
     return;
   }
-
-  switch(clock){
-  default:
-    machine=TAP_MACHINE_C64;
-    break;
-  case MACHINE_VIC20:
-    machine=TAP_MACHINE_VIC;
-    break;
-  case MACHINE_C16:
-    machine=TAP_MACHINE_C16;
-    break;
-  case MACHINE_C16_SEMIWAVES:
-    machine=TAP_MACHINE_C16;
-    params->inverted = TAP_TRIGGER_ON_BOTH_EDGES;
-    tap_version = 2;
-    break;
-  }
+  params->semiwaves = tap_version == 2;
 
   if (infile && strlen(infile)){
-    if(audio2tap_open_from_file(&audiotap_in,
+    if(audio2tap_open_from_file2(&audiotap_in,
                                 infile,
                                 params,
                                 &machine,

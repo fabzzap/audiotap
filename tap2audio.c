@@ -50,7 +50,7 @@ void version(){
 }
    
 int main(int argc, char** argv){
-  struct tapdec_params params = {254, TAP_TRIGGER_ON_RISING_EDGE, TAPDEC_SQUARE};
+  struct tapdec_params params = {254, 0, 0, TAPDEC_SQUARE};
   int freq = 44100;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
@@ -64,7 +64,7 @@ int main(int argc, char** argv){
   int option;
   struct audiotap_init_status status;
 
-  status = audiotap_initialize();
+  status = audiotap_initialize2();
   if ((status.audiofile_init_status != LIBRARY_OK &&
       status.portaudio_init_status != LIBRARY_OK)
    || status.tapdecoder_init_status != LIBRARY_OK){

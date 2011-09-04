@@ -59,7 +59,8 @@ int main(int argc, char** argv){
   /* min_duration */ 0,
   /* sensitivity */ 12,
   /* initial_threshold */ 20,
-  /* inverted */ TAP_TRIGGER_ON_RISING_EDGE
+  /* inverted */ 0,
+  /* semiwaves */ 0
   };
   uint32_t freq = 44100;
   uint8_t tap_version = 1;
@@ -78,10 +79,10 @@ int main(int argc, char** argv){
   };
   char *infile, *outfile;
   int option;
-  enum machines clock = MACHINE_C64;
+  uint8_t machine = TAP_MACHINE_C64;
   uint8_t videotype = TAP_VIDEOTYPE_PAL;
 
-  status = audiotap_initialize();
+  status = audiotap_initialize2();
   if ((status.audiofile_init_status != LIBRARY_OK &&
        status.portaudio_init_status != LIBRARY_OK)
     || status.tapencoder_init_status != LIBRARY_OK){
@@ -93,13 +94,19 @@ int main(int argc, char** argv){
     switch(option){
     case 'c':
       if(!strcmp(optarg,"c64"))
-        clock = MACHINE_C64;
+        machine = TAP_MACHINE_C64;
       else if(!strcmp(optarg,"vic"))
-        clock = MACHINE_VIC20;
+        machine = TAP_MACHINE_VIC;
       else if(!strcmp(optarg,"c16"))
-        clock = MACHINE_C16;
-      else if(!strcmp(optarg,"c16semi"))
-        clock = MACHINE_C16_SEMIWAVES;
+        machine = TAP_MACHINE_C16;
+      else if(!strcmp(optarg,"c16semi")){
+        machine = TAP_MACHINE_C16;
+        if (tap_version == 0){
+          printf("-c c16semi and -0 are incompatible\n");
+          exit(1);
+        }
+        tap_version = 2;
+      }
       else{
         printf("Wrong argument to option -c\n");
         exit(1);
@@ -122,10 +129,14 @@ int main(int argc, char** argv){
       freq=atoi(optarg);
       break;
     case '0':
+      if (tap_version == 2){
+        printf("-c c16semi and -0 are incompatible\n");
+        exit(1);
+      }
       tap_version=0;
       break;
     case 'i':
-      params.inverted=TAP_TRIGGER_ON_FALLING_EDGE;
+      params.inverted=1;
       break;
     case 'n':
       videotype=TAP_VIDEOTYPE_NTSC;
@@ -178,7 +189,7 @@ int main(int argc, char** argv){
   }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, &params, tap_version, clock, videotype);
+  audio2tap(infile, outfile, freq, &params, tap_version, machine, videotype);
 
   exit(0);
 }

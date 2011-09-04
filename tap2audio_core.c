@@ -24,20 +24,18 @@ void tap2audio(char *infile,
 	       struct tapdec_params *params,
 	       uint32_t freq)
 {
-  uint8_t semiwaves, machine, videotype;
+  uint8_t machine, videotype;
   struct audiotap *audiotap_in, *audiotap_out;
 
-  if (audio2tap_open_from_file(&audiotap_in,
+  if (audio2tap_open_from_file2(&audiotap_in,
                                infile,
                                NULL,
                                &machine,
                                &videotype,
-                               &semiwaves) != AUDIOTAP_OK){
+                               &params->semiwaves) != AUDIOTAP_OK){
     error_message("File %s cannot be opened for reading", infile);
     return;
   }
-  if (semiwaves)
-    params->inverted = TAP_TRIGGER_ON_BOTH_EDGES;
   if (outfile && strlen(outfile)){
     if (tap2audio_open_to_wavfile(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
