@@ -37,13 +37,13 @@ void tap2audio(char *infile,
     return;
   }
   if (outfile && strlen(outfile)){
-    if (tap2audio_open_to_wavfile(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
+    if (tap2audio_open_to_wavfile2(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
       audio2tap_close(audiotap_in);
       return;
     }
   }
-  else if(tap2audio_open_to_soundcard(&audiotap_out, params, freq, machine, videotype)){
+  else if(tap2audio_open_to_soundcard2(&audiotap_out, params, freq, machine, videotype)){
     error_message("Sound card cannot be opened", infile);
     audio2tap_close(audiotap_in);
     return;

@@ -162,7 +162,7 @@ struct audiotap_advanced {
   char input_filename[1024];
   char output_filename[1024];
   uint32_t freq;
-  enum machines clock;
+  uint8_t machine;
   uint8_t videotype;
   uint8_t tap_version;
   struct tapenc_params tapenc_params;
@@ -265,7 +265,7 @@ LPARAM lParam
     if (notify->hdr.code == CDN_FILEOK){
       HWND main_window = GetParent(GetParent(hdlg));
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(main_window, GWL_USERDATA);
-      if (adv != NULL && adv->clock != MACHINE_C16_SEMIWAVES){
+      if (adv != NULL && adv->tap_version != 2){
         LRESULT tap_result = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
         adv->tap_version = tap_result == 0 ? 0 : 1;
       }
@@ -281,7 +281,7 @@ DWORD WINAPI audio2tap_thread(LPVOID params){
     ((struct audiotap_advanced*)params)->freq,
     &((struct audiotap_advanced*)params)->tapenc_params,
     ((struct audiotap_advanced*)params)->tap_version,
-    ((struct audiotap_advanced*)params)->clock,
+    ((struct audiotap_advanced*)params)->machine,
     ((struct audiotap_advanced*)params)->videotype);
   return 0;
 }
@@ -320,7 +320,7 @@ void save_to_tap(HWND hwnd){
   file.lpstrTitle = "Choose the TAP file to be created";
   file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
     OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
-  if (adv->clock != MACHINE_C16_SEMIWAVES){
+  if (adv->tap_version != 2){
     file.Flags |= OFN_ENABLETEMPLATE;
     file.lpTemplateName = MAKEINTRESOURCE(IDD_CHOOSE_TAP_VERSION);
   }
@@ -346,8 +346,7 @@ void save_to_tap(HWND hwnd){
   control=GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS);
   SetWindowText(control, msg_string);
 
-  adv->tapenc_params.inverted = (IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED) ?
-    TAP_TRIGGER_ON_FALLING_EDGE : TAP_TRIGGER_ON_RISING_EDGE;
+  adv->tapenc_params.inverted = (IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED);
 
   thread=CreateThread(NULL, 0, audio2tap_thread, adv, 0, &thread_id);
 
@@ -454,8 +453,7 @@ void read_from_tap(HWND hwnd){
   strncpy(msg_string, "Progress indication", 128);
   SetWindowText(GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS), msg_string);
 
-  adv->tapdec_params.inverted = (IsDlgButtonChecked(hwnd, IDC_FROM_TAP_INVERTED) == BST_CHECKED) ?
-    TAP_TRIGGER_ON_FALLING_EDGE : TAP_TRIGGER_ON_RISING_EDGE;
+  adv->tapdec_params.inverted = (IsDlgButtonChecked(hwnd, IDC_FROM_TAP_INVERTED) == BST_CHECKED);
 
   thread=CreateThread(NULL, 0, tap2audio_thread, adv, 0, &thread_id);
 
@@ -491,9 +489,14 @@ LPARAM lParam // second message parameter
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20");
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16");
       SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16 with semiwaves");
-      /* The following needs that CB_ADDSTRING in IDC_CLOCKS is called
-         in the same order as in enum machines */
-      SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,adv->clock,0);
+      if (adv->tap_version == 2)
+        SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,3,0);
+      else if (adv->machine == TAP_MACHINE_C64)
+        SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,0,0);
+      else if (adv->machine == TAP_MACHINE_VIC)
+        SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,1,0);
+      else
+        SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,2,0);
       if(adv->videotype == TAP_VIDEOTYPE_PAL)
         CheckRadioButton(hwnd,IDC_VIDEOTYPE_PAL,IDC_VIDEOTYPE_NTSC,IDC_VIDEOTYPE_PAL);
       else
@@ -521,23 +524,26 @@ LPARAM lParam // second message parameter
       switch (clock_result){
       case 0:
       default:
-        adv->clock = MACHINE_C64;
+        adv->machine = TAP_MACHINE_C64;
+        adv->tap_version = 1;
         break;
       case 1:
-        adv->clock = MACHINE_VIC20;
+        adv->machine = TAP_MACHINE_VIC;
+        adv->tap_version = 1;
         break;
       case 2:
-        adv->clock = MACHINE_C16;
+        adv->machine = TAP_MACHINE_C16;
+        adv->tap_version = 1;
         break;
       case 3:
-        adv->clock = MACHINE_C16_SEMIWAVES;
+        adv->machine = TAP_MACHINE_C16;
+        adv->tap_version = 2;
         break;
       }
       if (IsDlgButtonChecked(hwnd, IDC_VIDEOTYPE_PAL) == BST_CHECKED)
         adv->videotype = TAP_VIDEOTYPE_PAL;
       else
         adv->videotype = TAP_VIDEOTYPE_NTSC;
-      EnableWindow(GetDlgItem(GetParent(hwnd),IDC_TO_TAP_INVERTED),adv->clock != MACHINE_C16_SEMIWAVES);
       EndDialog(hwnd,0);
     }
 
@@ -739,12 +745,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       LPSTR lpCmdLine, int nCmdShow ){
   struct audiotap_advanced adv = {"", "", 44100,
     TAP_MACHINE_C64,TAP_VIDEOTYPE_PAL,1,
-    {0,12,20,TAP_TRIGGER_ON_RISING_EDGE},
-    {254,TAP_TRIGGER_ON_RISING_EDGE,TAPDEC_SQUARE}
+    {0,12,20,0,0},
+    {254,0,0,TAPDEC_SQUARE}
   };
 
   instance = hInstance;
-  audiotap_status = audiotap_initialize();
+  audiotap_status = audiotap_initialize2();
   if (audiotap_status.audiofile_init_status != LIBRARY_OK &&
     audiotap_status.portaudio_init_status != LIBRARY_OK){
     MessageBoxA(0,"Both audiofile.dll and portaudio.dll are missing or improperly installed",

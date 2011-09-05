@@ -47,7 +47,7 @@ void audio2tap(char *infile,
       return;
     }
   }
-  else if (audio2tap_from_soundcard(&audiotap_in,
+  else if (audio2tap_from_soundcard2(&audiotap_in,
                                     freq,
                                     params,
                                     machine,
