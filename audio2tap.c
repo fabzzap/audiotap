@@ -59,8 +59,7 @@ int main(int argc, char** argv){
   /* min_duration */ 0,
   /* sensitivity */ 12,
   /* initial_threshold */ 20,
-  /* inverted */ 0,
-  /* semiwaves */ 0
+  /* inverted */ 0
   };
   uint32_t freq = 44100;
   uint8_t tap_version = 1;
