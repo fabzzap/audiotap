@@ -35,7 +35,6 @@ void audio2tap(char *infile,
     error_message("TAP version %u is unsupported", infile);
     return;
   }
-  halfwaves = tap_version == 2;
 
   if (infile && strlen(infile)){
     if(audio2tap_open_from_file3(&audiotap_in,
@@ -48,17 +47,16 @@ void audio2tap(char *infile,
       return;
     }
   }
-  else if (audio2tap_from_soundcard3(&audiotap_in,
+  else if (audio2tap_from_soundcard4(&audiotap_in,
                                     freq,
                                     params,
                                     machine,
-                                    videotype,
-                                    halfwaves) != AUDIOTAP_OK){
+                                    videotype) != AUDIOTAP_OK){
     error_message("Sound card cannot be opened");
     return;
   }
 
-  if (tap2audio_open_to_tapfile2(&audiotap_out, outfile, tap_version,
+  if (tap2audio_open_to_tapfile3(&audiotap_out, outfile, tap_version,
                                 machine,
                                 videotype) != AUDIOTAP_OK){
     error_message("Cannot open file %s: %s", outfile, strerror(errno));
@@ -66,5 +64,9 @@ void audio2tap(char *infile,
     return;
   }
 
+  if (halfwaves && tap_version == 2){
+    tap2audio_enable_halfwaves(audiotap_out, 1);
+    audio2tap_enable_disable_halfwaves(audiotap_in, 1);
+  }
   audiotap_loop(audiotap_in, audiotap_out, audiotap_in);
 }

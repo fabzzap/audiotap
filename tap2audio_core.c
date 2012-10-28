@@ -24,29 +24,33 @@ void tap2audio(char *infile,
 	       struct tapdec_params *params,
 	       uint32_t freq)
 {
-  uint8_t machine, videotype;
+  uint8_t machine, videotype, halfwaves;
   struct audiotap *audiotap_in, *audiotap_out;
 
-  if (audio2tap_open_from_file2(&audiotap_in,
+  if (audio2tap_open_from_file3(&audiotap_in,
                                infile,
                                NULL,
                                &machine,
                                &videotype,
-                               &params->semiwaves) != AUDIOTAP_OK){
+                               &halfwaves) != AUDIOTAP_OK){
     error_message("File %s cannot be opened for reading", infile);
     return;
   }
   if (outfile && strlen(outfile)){
-    if (tap2audio_open_to_wavfile2(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
+    if (tap2audio_open_to_wavfile4(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
       audio2tap_close(audiotap_in);
       return;
     }
   }
-  else if(tap2audio_open_to_soundcard2(&audiotap_out, params, freq, machine, videotype)){
+  else if(tap2audio_open_to_soundcard4(&audiotap_out, params, freq, machine, videotype)){
     error_message("Sound card cannot be opened", infile);
     audio2tap_close(audiotap_in);
     return;
+  }
+  if (halfwaves){
+    tap2audio_enable_halfwaves(audiotap_out, 1);
+    audio2tap_enable_disable_halfwaves(audiotap_in, 1);
   }
 
   audiotap_loop(audiotap_in, audiotap_out, audiotap_out);

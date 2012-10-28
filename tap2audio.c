@@ -50,7 +50,7 @@ void version(){
 }
    
 int main(int argc, char** argv){
-  struct tapdec_params params = {254, 0, 0, TAPDEC_SQUARE};
+  struct tapdec_params params = {254, 0, 0, AUDIOTAP_WAVE_SQUARE};
   int freq = 44100;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
@@ -95,11 +95,11 @@ int main(int argc, char** argv){
       exit(0);
     case 'w':
       if(!strcmp(optarg,"square"))
-        params.waveform = TAPDEC_SQUARE;
+        params.waveform = AUDIOTAP_WAVE_SQUARE;
       else if(!strcmp(optarg,"sine"))
-        params.waveform = TAPDEC_SINE;
+        params.waveform = AUDIOTAP_WAVE_SINE;
       else if(!strcmp(optarg,"triangle"))
-        params.waveform = TAPDEC_TRIANGLE;
+        params.waveform = AUDIOTAP_WAVE_TRIANGLE;
       else{
         printf("Wrong argument to option -c\n");
         exit(1);
