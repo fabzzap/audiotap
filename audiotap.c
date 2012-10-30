@@ -287,7 +287,7 @@ DWORD WINAPI audio2tap_thread(LPVOID params){
 }
 
 void save_to_tap(HWND hwnd){
-  OPENFILENAME file;
+  OPENFILENAMEA file;
   char* input_filename_base, *output_filename_base;
   MSG msg;
   DWORD thread_id;
@@ -311,7 +311,7 @@ void save_to_tap(HWND hwnd){
     file.lpfnHook = wav_opensave_hook_proc;
     file.lpstrDefExt = "wav";
     file.nFilterIndex = 1;
-    if (GetOpenFileName(&file) == FALSE)
+    if (GetOpenFileNameA(&file) == FALSE)
       return;
     input_filename_base = adv->input_filename + file.nFileOffset;
   }
@@ -322,13 +322,13 @@ void save_to_tap(HWND hwnd){
     OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
   if (adv->tap_version != 2){
     file.Flags |= OFN_ENABLETEMPLATE;
-    file.lpTemplateName = MAKEINTRESOURCE(IDD_CHOOSE_TAP_VERSION);
+    file.lpTemplateName = MAKEINTRESOURCEA(IDD_CHOOSE_TAP_VERSION);
   }
   file.lpstrFile = adv->output_filename;
   file.hInstance = instance;
   file.lpfnHook = tap_save_hook_proc;
   file.lpstrDefExt = "tap";
-  if (GetSaveFileName(&file) == FALSE)
+  if (GetSaveFileNameA(&file) == FALSE)
     return;
   output_filename_base = adv->output_filename + file.nFileOffset;
 
@@ -338,13 +338,13 @@ void save_to_tap(HWND hwnd){
   UpdateWindow(status_window);
   _snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename_base : "sound card"));
   control=GetDlgItem(status_window, IDC_ORIGIN);
-  SetWindowText(control, msg_string);
+  SetWindowTextA(control, msg_string);
   _snprintf(msg_string, 128, "Destination: %s", output_filename_base);
   control=GetDlgItem(status_window, IDC_DESTINATION);
-  SetWindowText(control, msg_string);
+  SetWindowTextA(control, msg_string);
   strncpy(msg_string, IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? "Progress indication" : "Volume level", 128);
   control=GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS);
-  SetWindowText(control, msg_string);
+  SetWindowTextA(control, msg_string);
 
   adv->tapenc_params.inverted = (IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED);
 
@@ -402,7 +402,7 @@ DWORD WINAPI tap2audio_thread(LPVOID params){
 }
 
 void read_from_tap(HWND hwnd){
-  OPENFILENAME file;
+  OPENFILENAMEA file;
   char* input_filename_base, *output_filename_base;
   MSG msg;
   DWORD thread_id;
@@ -424,7 +424,7 @@ void read_from_tap(HWND hwnd){
   file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK;
   file.lpstrFile = adv->input_filename;
   file.lpfnHook = tap_open_hook_proc;
-  if (GetOpenFileName(&file) == FALSE)
+  if (GetOpenFileNameA(&file) == FALSE)
     return;
   input_filename_base = adv->input_filename + file.nFileOffset;
 
@@ -437,7 +437,7 @@ void read_from_tap(HWND hwnd){
     file.lpstrDefExt = "wav";
     file.nFilterIndex = 1;
     file.lpfnHook = wav_opensave_hook_proc;
-    if (GetSaveFileName(&file) == FALSE)
+    if (GetSaveFileNameA(&file) == FALSE)
       return;
     output_filename_base = adv->output_filename + file.nFileOffset;
   }
@@ -447,11 +447,11 @@ void read_from_tap(HWND hwnd){
   ShowWindow(status_window, SW_SHOWNORMAL);
   UpdateWindow(status_window);
   _snprintf(msg_string, 128, "Origin: %s", input_filename_base);
-  SetWindowText(GetDlgItem(status_window, IDC_ORIGIN), msg_string);
+  SetWindowTextA(GetDlgItem(status_window, IDC_ORIGIN), msg_string);
   _snprintf(msg_string, 128, "Destination: %s", (IsDlgButtonChecked(hwnd, IDC_TO_WAV) ? output_filename_base : "sound card"));
-  SetWindowText(GetDlgItem(status_window, IDC_DESTINATION), msg_string);
+  SetWindowTextA(GetDlgItem(status_window, IDC_DESTINATION), msg_string);
   strncpy(msg_string, "Progress indication", 128);
-  SetWindowText(GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS), msg_string);
+  SetWindowTextA(GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS), msg_string);
 
   adv->tapdec_params.inverted = (IsDlgButtonChecked(hwnd, IDC_FROM_TAP_INVERTED) == BST_CHECKED);
 
@@ -485,10 +485,9 @@ LPARAM lParam // second message parameter
       SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_HEIGHT  ,adv->tapenc_params.sensitivity      ,FALSE);
       SetDlgItemInt(hwnd,IDC_TO_TAP_ADVANCED_MIN_DURATION,adv->tapenc_params.min_duration     ,FALSE);
       SetDlgItemInt(hwnd,IDC_INITIAL_THRESHOLD           ,adv->tapenc_params.initial_threshold,FALSE);
-      SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C64");
-      SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20");
-      SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16");
-      SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16 with semiwaves");
+      SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C64");
+      SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20");
+      SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16");
       if (adv->tap_version == 2)
         SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,3,0);
       else if (adv->machine == TAP_MACHINE_C64)
@@ -569,9 +568,9 @@ LPARAM lParam // second message parameter
       struct audiotap_advanced *adv = (struct audiotap_advanced *)lParam;
       SetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_FREQ  ,adv->freq,FALSE);
       SetDlgItemInt(hwnd,IDC_FROM_TAP_ADVANCED_VOLUME,adv->tapdec_params.volume ,FALSE);
-      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Triangle");
-      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Square");
-      SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Sine");
+      SendMessageA(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Triangle");
+      SendMessageA(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Square");
+      SendMessageA(GetDlgItem(hwnd, IDC_WAVEFORM), CB_ADDSTRING, 0, (LPARAM)"Sine");
       /* The following needs that CB_ADDSTRING are called in the same order as in enum tapdec_waveform */
       SendMessage(GetDlgItem(hwnd, IDC_WAVEFORM), CB_SETCURSEL, (WPARAM)adv->tapdec_params.waveform, 0);
       return 1;
@@ -590,14 +589,14 @@ LPARAM lParam // second message parameter
       waveform_result = SendMessage(GetDlgItem(hwnd,IDC_WAVEFORM),CB_GETCURSEL,0,0);
       switch(waveform_result){
       case 0:
-        adv->tapdec_params.waveform = TAPDEC_TRIANGLE;
+        adv->tapdec_params.waveform = AUDIOTAP_WAVE_TRIANGLE;
         break;
       case 1:
       default:
-        adv->tapdec_params.waveform = TAPDEC_SQUARE;
+        adv->tapdec_params.waveform = AUDIOTAP_WAVE_SQUARE;
         break;
       case 2:
-        adv->tapdec_params.waveform = TAPDEC_SINE;
+        adv->tapdec_params.waveform = AUDIOTAP_WAVE_SINE;
         break;
       }
       EndDialog(hwnd,0);
@@ -745,8 +744,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       LPSTR lpCmdLine, int nCmdShow ){
   struct audiotap_advanced adv = {"", "", 44100,
     TAP_MACHINE_C64,TAP_VIDEOTYPE_PAL,1,
-    {0,12,20,0,0},
-    {254,0,0,TAPDEC_SQUARE}
+    {0,12,20,0},
+    {254,0,AUDIOTAP_WAVE_SQUARE}
   };
 
   instance = hInstance;
