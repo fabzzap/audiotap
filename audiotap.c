@@ -109,7 +109,7 @@ LPARAM lParam
     return 0;
   }
 
-};
+}
 
 static void set_library_status_message(enum library_status status, HWND hwnd, int item){
   char *message;
@@ -198,7 +198,7 @@ LPARAM lParam
     }
   }
   return 0;
-};
+}
 
 UINT_PTR APIENTRY tap_open_hook_proc ( HWND hdlg,
  // handle to child dialog window
@@ -229,7 +229,7 @@ LPARAM lParam
     }
   }
   return 0;
-};
+}
 
 UINT_PTR APIENTRY tap_save_hook_proc ( HWND hdlg,
  // handle to child dialog window
@@ -245,9 +245,11 @@ LPARAM lParam
 
  ){
   if (uiMsg == WM_INITDIALOG){
-    SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 0");
-    SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 1");
-    SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_SETCURSEL, (WPARAM)1, 0);
+    struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(GetParent(hdlg)), GWL_USERDATA);
+    SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 0");
+    SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 1");
+    SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 2");
+    SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_SETCURSEL, (WPARAM)adv->tap_version, 0);
   }
   if (uiMsg == WM_NOTIFY){
     OFNOTIFY *notify = (OFNOTIFY *)lParam;
@@ -267,22 +269,44 @@ LPARAM lParam
       struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(main_window, GWL_USERDATA);
       if (adv != NULL && adv->tap_version != 2){
         LRESULT tap_result = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
-        adv->tap_version = tap_result == 0 ? 0 : 1;
+        adv->tap_version = (tap_result >= 0 && tap_result <= 2) ? (uint8_t)tap_result : 1;
       }
     }
   }
   return 0;
-};
-
+}
 
 DWORD WINAPI audio2tap_thread(LPVOID params){
-  audio2tap(((struct audiotap_advanced*)params)->input_filename,
+  char ** args = NULL;
+  int numarg = 0, i;
+  char* passed_arg = ((struct audiotap_advanced*)params)->input_filename;
+
+  if(passed_arg != NULL){
+    int dir_len = strlen(passed_arg);
+    char *filename;
+    int filename_len;
+
+    for (filename = passed_arg + dir_len + 1; (filename_len = strlen(filename)) != 0; filename += filename_len + 1, numarg++){
+      args = (char**)realloc(args, sizeof(*args) * (numarg + 1));
+      args[numarg] = (char*)malloc(dir_len + filename_len + 2);
+      strcpy(args[numarg], passed_arg);
+      strcat(args[numarg], "\\");
+      strcat(args[numarg], filename);
+    }
+  }
+  audio2tap(args,
+    numarg,
     ((struct audiotap_advanced*)params)->output_filename,
     ((struct audiotap_advanced*)params)->freq,
     &((struct audiotap_advanced*)params)->tapenc_params,
     ((struct audiotap_advanced*)params)->tap_version,
     ((struct audiotap_advanced*)params)->machine,
     ((struct audiotap_advanced*)params)->videotype);
+  for (i = 0; i < numarg; i++)
+  {
+    free(args[i]);
+  }
+  free(args);
   return 0;
 }
 
@@ -306,7 +330,7 @@ void save_to_tap(HWND hwnd){
   if (IsDlgButtonChecked(hwnd, IDC_FROM_WAV)){
     file.lpstrFilter ="WAV files (*.wav)\0*.wav\0All files\0*.*\0\0";
     file.lpstrTitle = "Choose the audio file (WAV or similar) to convert to TAP";
-    file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK;
+    file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_ALLOWMULTISELECT;
     file.lpstrFile = adv->input_filename;
     file.lpfnHook = wav_opensave_hook_proc;
     file.lpstrDefExt = "wav";
@@ -320,10 +344,8 @@ void save_to_tap(HWND hwnd){
   file.lpstrTitle = "Choose the TAP file to be created";
   file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
     OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
-  if (adv->tap_version != 2){
-    file.Flags |= OFN_ENABLETEMPLATE;
-    file.lpTemplateName = MAKEINTRESOURCEA(IDD_CHOOSE_TAP_VERSION);
-  }
+  file.Flags |= OFN_ENABLETEMPLATE;
+  file.lpTemplateName = MAKEINTRESOURCEA(IDD_CHOOSE_TAP_VERSION);
   file.lpstrFile = adv->output_filename;
   file.hInstance = instance;
   file.lpfnHook = tap_save_hook_proc;
@@ -365,7 +387,7 @@ void save_to_tap(HWND hwnd){
   EnableWindow(hwnd, TRUE);
   DestroyWindow(status_window);
   status_window = NULL;
-};
+}
 
 INT_PTR CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
  // handle to dialog box
@@ -389,9 +411,7 @@ LPARAM lParam
   default:
     return 0;
   }
-
-};
-
+}
 
 DWORD WINAPI tap2audio_thread(LPVOID params){
   tap2audio(((struct audiotap_advanced*)params)->input_filename,
@@ -488,9 +508,7 @@ LPARAM lParam // second message parameter
       SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C64");
       SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"VIC20");
       SendMessageA(GetDlgItem(hwnd,IDC_CLOCKS),CB_ADDSTRING,0,(LPARAM)"C16");
-      if (adv->tap_version == 2)
-        SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,3,0);
-      else if (adv->machine == TAP_MACHINE_C64)
+      if (adv->machine == TAP_MACHINE_C64)
         SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,0,0);
       else if (adv->machine == TAP_MACHINE_VIC)
         SendMessage(GetDlgItem(hwnd,IDC_CLOCKS),CB_SETCURSEL,1,0);
@@ -531,10 +549,6 @@ LPARAM lParam // second message parameter
         adv->tap_version = 1;
         break;
       case 2:
-        adv->machine = TAP_MACHINE_C16;
-        adv->tap_version = 1;
-        break;
-      case 3:
         adv->machine = TAP_MACHINE_C16;
         adv->tap_version = 2;
         break;

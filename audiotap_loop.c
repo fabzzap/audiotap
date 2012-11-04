@@ -34,9 +34,11 @@ static void update_status(struct audiotap *audiotap_in){
    statusbar_update(currloudness);
 }
 
-void audiotap_loop(struct audiotap *audiotap_in
-                   ,struct audiotap *audiotap_out
-                   ,struct audiotap *interruptible){
+unsigned int audiotap_loop(struct audiotap *audiotap_in
+                          ,struct audiotap *audiotap_out
+                          ,struct audiotap *interruptible
+                          ,uint8_t close_output_file_at_end,
+                          uint8_t *problems_occurred){
   enum audiotap_status status = AUDIOTAP_OK;
   unsigned int datalen = 0;
   int totlen;
@@ -50,22 +52,36 @@ void audiotap_loop(struct audiotap *audiotap_in
   while(status == AUDIOTAP_OK){
     uint32_t pulse, raw_pulse;
 
-    if ((++datalen) % 10000 == 0)
-      update_status(audiotap_in);
     status = audio2tap_get_pulses(audiotap_in, &pulse, &raw_pulse);
     if (status != AUDIOTAP_OK)
       break;
 
     status = tap2audio_set_pulse(audiotap_out, pulse);
+    if ((++datalen) % 10000 == 0)
+      update_status(audiotap_in);
   }
   update_status(audiotap_in);
   statusbar_exit();
-  if (status == AUDIOTAP_INTERRUPTED)
+  switch (status){
+  case AUDIOTAP_OK:
+  case AUDIOTAP_EOF:
+    if (problems_occurred != NULL)
+      *problems_occurred = 0;
+    break;
+  case AUDIOTAP_INTERRUPTED:
     warning_message("Interrupted");
-  else if(status != AUDIOTAP_OK && status != AUDIOTAP_EOF)
+    if (problems_occurred != NULL)
+      *problems_occurred = 1;
+    break;
+  default:
     error_message("Something went wrong");
+    if (problems_occurred != NULL)
+      *problems_occurred = 1;
+  }
   audiotap_interruptible = NULL;
-  tap2audio_close(audiotap_out);
+  if (close_output_file_at_end)
+    tap2audio_close(audiotap_out);
   audio2tap_close(audiotap_in);
+  return datalen;
 }
 

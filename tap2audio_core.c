@@ -53,6 +53,6 @@ void tap2audio(char *infile,
     audio2tap_enable_disable_halfwaves(audiotap_in, 1);
   }
 
-  audiotap_loop(audiotap_in, audiotap_out, audiotap_out);
+  audiotap_loop(audiotap_in, audiotap_out, audiotap_out, 1, NULL);
 }
 

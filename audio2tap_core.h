@@ -17,11 +17,12 @@
 
 struct tapenc_params;
 
-void audio2tap(char *infile,
-          char *outfile,
-          uint32_t freq,
-          struct tapenc_params *params,
-          uint8_t tap_version,
-          uint8_t machine,
-          uint8_t videotype);
+void audio2tap(char **infiles,
+               int numinfiles,
+               char *outfile,
+               uint32_t freq,
+               struct tapenc_params *params,
+               uint8_t tap_version,
+               uint8_t machine,
+               uint8_t videotype);
 

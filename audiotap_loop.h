@@ -12,9 +12,13 @@
  * This file is part of Audiotap core processing files
  */
 
+#include <stdint.h>
+
 struct audiotap;
 
 void audiotap_interrupt();
-void audiotap_loop(struct audiotap *audiotap_in
-                   ,struct audiotap *audiotap_out
-                   ,struct audiotap *interruptible);
+unsigned int audiotap_loop(struct audiotap *audiotap_in
+                          ,struct audiotap *audiotap_out
+                          ,struct audiotap *interruptible
+                          ,uint8_t close_output_file_at_end,
+                           uint8_t *problems_occurred);
