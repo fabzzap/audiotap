@@ -159,6 +159,8 @@ LPARAM lParam // second message parameter
 }
 
 struct audiotap_advanced {
+  char **input_filenames;
+  int num_input_filenames;
   char input_filename[1024];
   char output_filename[1024];
   uint32_t freq;
@@ -277,68 +279,33 @@ LPARAM lParam
 }
 
 DWORD WINAPI audio2tap_thread(LPVOID params){
-  char ** args = NULL;
-  int numarg = 0, i;
-  char* passed_arg = ((struct audiotap_advanced*)params)->input_filename;
-
-  if(passed_arg != NULL){
-    int dir_len = strlen(passed_arg);
-    char *filename;
-    int filename_len;
-
-    for (filename = passed_arg + dir_len + 1; (filename_len = strlen(filename)) != 0; filename += filename_len + 1, numarg++){
-      args = (char**)realloc(args, sizeof(*args) * (numarg + 1));
-      args[numarg] = (char*)malloc(dir_len + filename_len + 2);
-      strcpy(args[numarg], passed_arg);
-      strcat(args[numarg], "\\");
-      strcat(args[numarg], filename);
-    }
-  }
-  audio2tap(args,
-    numarg,
+  audio2tap(((struct audiotap_advanced*)params)->input_filenames,
+    ((struct audiotap_advanced*)params)->num_input_filenames,
     ((struct audiotap_advanced*)params)->output_filename,
     ((struct audiotap_advanced*)params)->freq,
     &((struct audiotap_advanced*)params)->tapenc_params,
     ((struct audiotap_advanced*)params)->tap_version,
     ((struct audiotap_advanced*)params)->machine,
     ((struct audiotap_advanced*)params)->videotype);
-  for (i = 0; i < numarg; i++)
-  {
-    free(args[i]);
-  }
-  free(args);
   return 0;
 }
 
-void save_to_tap(HWND hwnd){
-  OPENFILENAMEA file;
-  char* input_filename_base, *output_filename_base;
+void real_save_to_tap(char* input_filename_base, HWND parent, struct audiotap_advanced *adv)
+{
   MSG msg;
   DWORD thread_id;
   HANDLE thread;
   char msg_string[128];
   HWND control;
-  struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
+  OPENFILENAMEA file;
+  char *output_filename_base;
+  int i;
 
-  adv->input_filename[0]=0;
   adv->output_filename[0]=0;
   memset(&file,0,sizeof(file));
   file.lStructSize = sizeof(file);
-  file.hwndOwner = hwnd;
-  file.nMaxFile = 1024;
-
-  if (IsDlgButtonChecked(hwnd, IDC_FROM_WAV)){
-    file.lpstrFilter ="WAV files (*.wav)\0*.wav\0All files\0*.*\0\0";
-    file.lpstrTitle = "Choose the audio file (WAV or similar) to convert to TAP";
-    file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_ALLOWMULTISELECT;
-    file.lpstrFile = adv->input_filename;
-    file.lpfnHook = wav_opensave_hook_proc;
-    file.lpstrDefExt = "wav";
-    file.nFilterIndex = 1;
-    if (GetOpenFileNameA(&file) == FALSE)
-      return;
-    input_filename_base = adv->input_filename + file.nFileOffset;
-  }
+  file.hwndOwner = parent;
+  file.nMaxFile = sizeof(adv->output_filename);
 
   file.lpstrFilter ="TAP file (*.tap)\0*.tap\0All files\0*.*\0\0";
   file.lpstrTitle = "Choose the TAP file to be created";
@@ -350,43 +317,90 @@ void save_to_tap(HWND hwnd){
   file.hInstance = instance;
   file.lpfnHook = tap_save_hook_proc;
   file.lpstrDefExt = "tap";
-  if (GetSaveFileNameA(&file) == FALSE)
-    return;
-  output_filename_base = adv->output_filename + file.nFileOffset;
+  if (GetSaveFileNameA(&file) == TRUE){
+    output_filename_base = adv->output_filename + file.nFileOffset;
 
-  status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,status_window_proc);
-  EnableWindow(hwnd, FALSE);
-  ShowWindow(status_window, SW_SHOWNORMAL);
-  UpdateWindow(status_window);
-  _snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? input_filename_base : "sound card"));
-  control=GetDlgItem(status_window, IDC_ORIGIN);
-  SetWindowTextA(control, msg_string);
-  _snprintf(msg_string, 128, "Destination: %s", output_filename_base);
-  control=GetDlgItem(status_window, IDC_DESTINATION);
-  SetWindowTextA(control, msg_string);
-  strncpy(msg_string, IsDlgButtonChecked(hwnd, IDC_FROM_WAV) ? "Progress indication" : "Volume level", 128);
-  control=GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS);
-  SetWindowTextA(control, msg_string);
+    status_window=CreateDialogA(instance,MAKEINTRESOURCEA(IDD_STATUS),parent,status_window_proc);
+    EnableWindow(parent, FALSE);
+    ShowWindow(status_window, SW_SHOWNORMAL);
+    UpdateWindow(status_window);
+    _snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(parent, IDC_FROM_WAV) ? input_filename_base : "sound card"));
+    control=GetDlgItem(status_window, IDC_ORIGIN);
+    SetWindowTextA(control, msg_string);
+    _snprintf(msg_string, 128, "Destination: %s", output_filename_base);
+    control=GetDlgItem(status_window, IDC_DESTINATION);
+    SetWindowTextA(control, msg_string);
+    strncpy(msg_string, IsDlgButtonChecked(parent, IDC_FROM_WAV) ? "Progress indication" : "Volume level", 128);
+    control=GetDlgItem(status_window, IDC_WHAT_PROGRESSBAR_MEANS);
+    SetWindowTextA(control, msg_string);
 
-  adv->tapenc_params.inverted = (IsDlgButtonChecked(hwnd, IDC_TO_TAP_INVERTED) == BST_CHECKED);
+    adv->tapenc_params.inverted = (IsDlgButtonChecked(parent, IDC_TO_TAP_INVERTED) == BST_CHECKED);
+      thread=CreateThread(NULL, 0, audio2tap_thread, adv, 0, &thread_id);
 
-  thread=CreateThread(NULL, 0, audio2tap_thread, adv, 0, &thread_id);
-
-  while(1){
-    DWORD retval;
-    retval = MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT);
-    if (retval == WAIT_OBJECT_0)
-      break;
-    while (PeekMessage (&msg, 0, 0, 0, PM_REMOVE))
-    {
-      TranslateMessage (&msg);
-      DispatchMessage (&msg);
+    while(1){
+      DWORD retval;
+      retval = MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT);
+      if (retval == WAIT_OBJECT_0)
+        break;
+      while (PeekMessage (&msg, 0, 0, 0, PM_REMOVE))
+      {
+        TranslateMessage (&msg);
+        DispatchMessage (&msg);
+      }
     }
+
+    EnableWindow(parent, TRUE);
+    DestroyWindow(status_window);
+    status_window = NULL;
+  }
+  for (i = 0; i < adv->num_input_filenames; i++)
+  {
+    free(adv->input_filenames[i]);
+  }
+  free(adv->input_filenames);
+}
+
+void save_to_tap(HWND hwnd){
+  OPENFILENAMEA file;
+  char* input_filename_base;
+  struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
+  char input_filename[1024];
+
+  input_filename[0]=0;
+  memset(&file,0,sizeof(file));
+  file.lStructSize = sizeof(file);
+  file.hwndOwner = hwnd;
+  file.nMaxFile = 1024;
+
+  if (IsDlgButtonChecked(hwnd, IDC_FROM_WAV)){
+    file.lpstrFilter ="WAV files (*.wav)\0*.wav\0All files\0*.*\0\0";
+    file.lpstrTitle = "Choose the audio file (WAV or similar) to convert to TAP";
+    file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_ALLOWMULTISELECT;
+    file.lpstrFile = input_filename;
+    file.lpfnHook = wav_opensave_hook_proc;
+    file.lpstrDefExt = "wav";
+    file.nFilterIndex = 1;
+    if (GetOpenFileNameA(&file) == FALSE)
+      return;
+    input_filename_base = input_filename + file.nFileOffset;
   }
 
-  EnableWindow(hwnd, TRUE);
-  DestroyWindow(status_window);
-  status_window = NULL;
+  {
+    int dir_len = strlen(input_filename) + 1;
+    char *filename;
+    int filename_len;
+
+    adv->input_filenames = NULL;
+    adv->num_input_filenames = 0;
+    for (filename = input_filename + dir_len; (filename_len = strlen(filename) + 1) != 1; filename += filename_len, adv->num_input_filenames++){
+      adv->input_filenames = (char**)realloc(adv->input_filenames, sizeof(*adv->input_filenames) * (adv->num_input_filenames + 1));
+      adv->input_filenames[adv->num_input_filenames] = (char*)malloc(dir_len + filename_len);
+      strcpy(adv->input_filenames[adv->num_input_filenames], input_filename);
+      strcat(adv->input_filenames[adv->num_input_filenames], "\\");
+      strcat(adv->input_filenames[adv->num_input_filenames], filename);
+    }
+  }
+  real_save_to_tap(input_filename_base, hwnd, adv);
 }
 
 INT_PTR CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
@@ -429,6 +443,7 @@ void read_from_tap(HWND hwnd){
   HANDLE thread;
   char msg_string[128];
   struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
+  char input_filename[1024];
 
   adv->input_filename[0]=0;
   adv->output_filename[0]=0;
@@ -736,6 +751,32 @@ LPARAM lParam // second message parameter
     default:
       return FALSE;
     }
+  case WM_DROPFILES:
+    {
+      UINT i;
+      struct audiotap_advanced adv;
+      char input_filename[_MAX_FNAME+_MAX_EXT];
+
+      memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
+      adv.num_input_filenames = DragQueryFileA((HDROP)wParam, 0xFFFFFFFF, NULL, 0);
+      adv.input_filenames = (char**)malloc(sizeof(*adv.input_filenames) * adv.num_input_filenames);
+      for (i = 0; i < adv.num_input_filenames; i++)
+      {
+        UINT filenamesize = DragQueryFile((HDROP)wParam, i, NULL, 0);
+        filenamesize++; /* for the null termination */
+        adv.input_filenames[i] = (char*)malloc(filenamesize);
+        DragQueryFileA((HDROP)wParam, i, adv.input_filenames[i], filenamesize);
+      }
+      DragFinish((HDROP)wParam);
+      if (adv.num_input_filenames > 0)
+      {
+        char ext[_MAX_EXT];
+        _splitpath(adv.input_filenames[0], NULL, NULL, input_filename, ext);
+        strcat(input_filename, ext);
+        real_save_to_tap(input_filename,hwnd, &adv);
+      }
+    }
+    return TRUE;
   case WM_CLOSE:
     DestroyWindow(hwnd);
     return TRUE;
@@ -756,7 +797,7 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       LPSTR lpCmdLine, int nCmdShow ){
-  struct audiotap_advanced adv = {"", "", 44100,
+  struct audiotap_advanced adv = {NULL, 0, "", "", 44100,
     TAP_MACHINE_C64,TAP_VIDEOTYPE_PAL,1,
     {0,12,20,0},
     {254,0,AUDIOTAP_WAVE_SQUARE}
