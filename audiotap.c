@@ -361,18 +361,24 @@ void real_save_to_tap(char* input_filename_base, HWND parent, struct audiotap_ad
 }
 
 void save_to_tap(HWND hwnd){
-  OPENFILENAMEA file;
-  char* input_filename_base;
+  char* input_filename_base = NULL;
   struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
-  char input_filename[1024];
 
-  input_filename[0]=0;
-  memset(&file,0,sizeof(file));
-  file.lStructSize = sizeof(file);
-  file.hwndOwner = hwnd;
-  file.nMaxFile = 1024;
+  adv->input_filenames = NULL;
+  adv->num_input_filenames = 0;
 
   if (IsDlgButtonChecked(hwnd, IDC_FROM_WAV)){
+    char *filename;
+    int filename_len;
+    OPENFILENAMEA file;
+    char input_filename[1024];
+    int dir_len;
+
+    input_filename[0]=0;
+    memset(&file,0,sizeof(file));
+    file.lStructSize = sizeof(file);
+    file.hwndOwner = hwnd;
+    file.nMaxFile = 1024;  
     file.lpstrFilter ="WAV files (*.wav)\0*.wav\0All files\0*.*\0\0";
     file.lpstrTitle = "Choose the audio file (WAV or similar) to convert to TAP";
     file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_ALLOWMULTISELECT;
@@ -383,15 +389,8 @@ void save_to_tap(HWND hwnd){
     if (GetOpenFileNameA(&file) == FALSE)
       return;
     input_filename_base = input_filename + file.nFileOffset;
-  }
+    dir_len = strlen(input_filename) + 1;
 
-  {
-    int dir_len = strlen(input_filename) + 1;
-    char *filename;
-    int filename_len;
-
-    adv->input_filenames = NULL;
-    adv->num_input_filenames = 0;
     for (filename = input_filename + dir_len; (filename_len = strlen(filename) + 1) != 1; filename += filename_len, adv->num_input_filenames++){
       adv->input_filenames = (char**)realloc(adv->input_filenames, sizeof(*adv->input_filenames) * (adv->num_input_filenames + 1));
       adv->input_filenames[adv->num_input_filenames] = (char*)malloc(dir_len + filename_len);
