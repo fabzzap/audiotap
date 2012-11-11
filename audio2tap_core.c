@@ -75,6 +75,8 @@ void audio2tap(char **infiles,
     else{
       unsigned int datalen;
 
+      if(!doing_audio)
+        update_input_filename(infiles[currentinfile]);
       tap2audio_enable_halfwaves(audiotap_out, halfwaves && tap_version == 2);
       audio2tap_enable_disable_halfwaves(audiotap_in, halfwaves && tap_version == 2);
       datalen = audiotap_loop(audiotap_in, audiotap_out, audiotap_in, 0, &retval);

@@ -18,6 +18,8 @@
 void warning_message(const char *format,...);
 void error_message(const char *format,...);
 
+void update_input_filename(const char *input_filename);
+
 void statusbar_initialize(int length);
 void statusbar_update(int cursize);
 void statusbar_exit(void);

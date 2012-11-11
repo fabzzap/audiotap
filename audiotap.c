@@ -290,7 +290,31 @@ DWORD WINAPI audio2tap_thread(LPVOID params){
   return 0;
 }
 
-void real_save_to_tap(char* input_filename_base, HWND parent, struct audiotap_advanced *adv)
+static char* get_basename(const char *filename, char *output_name, int outlen)
+{
+#ifdef _MSC_VER
+  char fname[_MAX_FNAME];
+  char ext[_MAX_EXT];
+  char *dest;
+
+  _splitpath(filename, NULL, NULL, fname, ext);
+  strncpy(output_name, fname, outlen);
+  strncat(output_name, ext, outlen);
+  return output_name;
+#else
+  strncpy(output_name, filename, outlen);
+  return basename(output_name);
+#endif
+}
+
+void update_input_filename(const char *input_filename)
+{
+  char msg_string[128] =  "Origin: ";
+  get_basename(input_filename, msg_string + strlen(msg_string), sizeof(msg_string) - strlen(msg_string));
+  SetWindowTextA(GetDlgItem(status_window, IDC_ORIGIN), msg_string);
+}
+
+void real_save_to_tap(HWND parent, struct audiotap_advanced *adv)
 {
   MSG msg;
   DWORD thread_id;
@@ -324,9 +348,8 @@ void real_save_to_tap(char* input_filename_base, HWND parent, struct audiotap_ad
     EnableWindow(parent, FALSE);
     ShowWindow(status_window, SW_SHOWNORMAL);
     UpdateWindow(status_window);
-    _snprintf(msg_string, 128, "Origin: %s",(IsDlgButtonChecked(parent, IDC_FROM_WAV) ? input_filename_base : "sound card"));
-    control=GetDlgItem(status_window, IDC_ORIGIN);
-    SetWindowTextA(control, msg_string);
+    if(adv->num_input_filenames == 0)
+      SetWindowTextA(GetDlgItem(status_window, IDC_ORIGIN), "Origin: sound card");
     _snprintf(msg_string, 128, "Destination: %s", output_filename_base);
     control=GetDlgItem(status_window, IDC_DESTINATION);
     SetWindowTextA(control, msg_string);
@@ -361,15 +384,12 @@ void real_save_to_tap(char* input_filename_base, HWND parent, struct audiotap_ad
 }
 
 void save_to_tap(HWND hwnd){
-  char* input_filename_base = NULL;
   struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
 
   adv->input_filenames = NULL;
   adv->num_input_filenames = 0;
 
   if (IsDlgButtonChecked(hwnd, IDC_FROM_WAV)){
-    char *filename;
-    int filename_len;
     OPENFILENAMEA file;
     char input_filename[1024];
     int dir_len;
@@ -388,18 +408,31 @@ void save_to_tap(HWND hwnd){
     file.nFilterIndex = 1;
     if (GetOpenFileNameA(&file) == FALSE)
       return;
-    input_filename_base = input_filename + file.nFileOffset;
+    if (file.nFileOffset < 1)
+      return;
     dir_len = strlen(input_filename) + 1;
 
-    for (filename = input_filename + dir_len; (filename_len = strlen(filename) + 1) != 1; filename += filename_len, adv->num_input_filenames++){
-      adv->input_filenames = (char**)realloc(adv->input_filenames, sizeof(*adv->input_filenames) * (adv->num_input_filenames + 1));
-      adv->input_filenames[adv->num_input_filenames] = (char*)malloc(dir_len + filename_len);
-      strcpy(adv->input_filenames[adv->num_input_filenames], input_filename);
-      strcat(adv->input_filenames[adv->num_input_filenames], "\\");
-      strcat(adv->input_filenames[adv->num_input_filenames], filename);
+    if (input_filename[file.nFileOffset - 1] != 0){
+      adv->input_filenames = (char**)malloc(sizeof(*adv->input_filenames));
+      adv->input_filenames[0] = (char*)malloc(dir_len);
+      strcpy(adv->input_filenames[0], input_filename);
+      adv->num_input_filenames = 1;
+    }
+    else
+    {
+      char *filename;
+      int filename_len;
+
+      for (filename = input_filename + dir_len; (filename_len = strlen(filename) + 1) != 1; filename += filename_len, adv->num_input_filenames++){
+        adv->input_filenames = (char**)realloc(adv->input_filenames, sizeof(*adv->input_filenames) * (adv->num_input_filenames + 1));
+        adv->input_filenames[adv->num_input_filenames] = (char*)malloc(dir_len + filename_len);
+        strcpy(adv->input_filenames[adv->num_input_filenames], input_filename);
+        strcat(adv->input_filenames[adv->num_input_filenames], "\\");
+        strcat(adv->input_filenames[adv->num_input_filenames], filename);
+      }
     }
   }
-  real_save_to_tap(input_filename_base, hwnd, adv);
+  real_save_to_tap(hwnd, adv);
 }
 
 INT_PTR CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
@@ -772,7 +805,7 @@ LPARAM lParam // second message parameter
         char ext[_MAX_EXT];
         _splitpath(adv.input_filenames[0], NULL, NULL, input_filename, ext);
         strcat(input_filename, ext);
-        real_save_to_tap(input_filename,hwnd, &adv);
+        real_save_to_tap(hwnd, &adv);
       }
     }
     return TRUE;
