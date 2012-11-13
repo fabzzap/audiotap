@@ -16,7 +16,7 @@
  * Copyright (C) 2001, 2002 Free Software Foundation, Inc.
  */
 
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,6 +48,12 @@ void error_message(const char *format,...){
   vsnprintf(string, sizeof(string), format, va);
   printf("Error: %s\n", string);
   va_end(va);
+}
+
+void update_input_filename(const char *input_filename)
+{
+  char *base = basename(input_filename);
+  printf("Converting %s\n",base);
 }
 
 /* "Thermometer" (bar) progress. */

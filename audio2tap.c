@@ -19,7 +19,6 @@
 #include <string.h>
 #include <getopt.h>
 #include <signal.h>
-
 #include "audio2tap_core.h"
 #include "audiotap.h"
 #include "audiotap_loop.h"
@@ -172,23 +171,9 @@ int main(int argc, char** argv){
   }
   else outfile = argv[0];
 
-  if (argc == 1){
-    if (status.portaudio_init_status != LIBRARY_OK){
-      printf("Cannot read from sound card: pablio library missing or invalid\n");
-      exit(1);
-    }
-    infile=NULL;
-  }
-  else{
-    if (status.audiofile_init_status != LIBRARY_OK){
-      printf("Cannot read from file: audiofile library missing or invalid\n");
-      exit(1);
-    }
-    infile=argv[1];
-  }      
   signal(SIGINT, sig_int);
 
-  audio2tap(infile, outfile, freq, &params, tap_version, machine, videotype);
+  audio2tap(argv + 1, argc - 1, outfile, freq, &params, tap_version, machine, videotype);
 
   exit(0);
 }
