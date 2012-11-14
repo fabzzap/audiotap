@@ -6,7 +6,7 @@
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
- * audiotap_main.c : main program for Windows version
+ * audiotap.c : main program for Windows version
  * Also implements the callback functions for the core processing part
  *
  * This file is shared between the audio->tap part and the tap->audio part
@@ -19,6 +19,9 @@
 #include <stdarg.h>
 #ifdef HAVE_HTMLHELP
 #include <htmlhelp.h>
+#endif
+#ifndef _MSC_VER
+#include <libgen.h>
 #endif
 #include "resource.h"
 #include "audiotap.h"
@@ -290,7 +293,7 @@ DWORD WINAPI audio2tap_thread(LPVOID params){
   return 0;
 }
 
-static char* get_basename(const char *filename, char *output_name, int outlen)
+static void get_basename(const char *filename, char *output_name, int outlen)
 {
 #ifdef _MSC_VER
   char fname[_MAX_FNAME];
@@ -300,10 +303,11 @@ static char* get_basename(const char *filename, char *output_name, int outlen)
   _splitpath(filename, NULL, NULL, fname, ext);
   strncpy(output_name, fname, outlen);
   strncat(output_name, ext, outlen);
-  return output_name;
 #else
-  strncpy(output_name, filename, outlen);
-  return basename(output_name);
+  char *writable_filename = strdup(filename);
+  /* why, oh why cannot the argument of basename () be const? */
+  strncpy(output_name, basename(writable_filename), outlen);
+  free(writable_filename);
 #endif
 }
 
