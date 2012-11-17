@@ -791,7 +791,6 @@ LPARAM lParam // second message parameter
     {
       UINT i;
       struct audiotap_advanced adv;
-      char input_filename[_MAX_FNAME+_MAX_EXT];
 
       memcpy(&adv,(void*)GetWindowLong(hwnd,GWL_USERDATA),sizeof(adv));
       adv.num_input_filenames = DragQueryFileA((HDROP)wParam, 0xFFFFFFFF, NULL, 0);
@@ -806,9 +805,6 @@ LPARAM lParam // second message parameter
       DragFinish((HDROP)wParam);
       if (adv.num_input_filenames > 0)
       {
-        char ext[_MAX_EXT];
-        _splitpath(adv.input_filenames[0], NULL, NULL, input_filename, ext);
-        strcat(input_filename, ext);
         real_save_to_tap(hwnd, &adv);
       }
     }
