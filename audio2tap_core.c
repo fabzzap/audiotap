@@ -68,7 +68,7 @@ void audio2tap(char **infiles,
                                     &in_videotype,
                                     &halfwaves) != AUDIOTAP_OK){
         error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", input_file);
-        if (this_is_the_last_input_file)
+        if (this_is_the_last_input_file && audiotap_out != NULL)
           tap2audio_close(audiotap_out);
         continue;
       }
