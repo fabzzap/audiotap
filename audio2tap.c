@@ -22,6 +22,7 @@
 #include "audio2tap_core.h"
 #include "audiotap.h"
 #include "audiotap_loop.h"
+#include "version.h"
 
 static void sig_int(int signum){
   audiotap_interrupt();
@@ -29,7 +30,7 @@ static void sig_int(int signum){
 
 void help(){
   printf("Usage: audio2tap -h|-V\n");
-  printf("       audio2tap [-i] [-d min_duration] [-H sensitivity] [-f <freq>] [-0] [-c c64ntsc|vicpal|vicntsc|c16pal|c16ntsc] <output TAP file> [input WAV file]\n");
+  printf("       audio2tap [-i] [-d min_duration] [-H sensitivity] [-f <freq>] [-0] [-c c64ntsc|vicpal|vicntsc|c16pal|c16ntsc] <output TAP file> [input WAV file [input WAV file...]]\n");
   printf("Options:\n");
   printf("\t-h: show this help message and exit successfully\n");
   printf("\t-V: show version and copyright info and exit successfully\n");
@@ -44,14 +45,14 @@ void help(){
 }
 
 void version(){
-  printf("audio2tap (part of Audiotap) version 1.5\n");
-  printf("(C) by Fabrizio Gennari, 2003-2011\n");
+  printf("audio2tap (part of Audiotap) version " AUDIOTAP_VERSION "\n");
+  printf("(C) by Fabrizio Gennari, 2003-2012\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
   printf("Foundation, Inc. and its contributors\n");
 }
-   
+
 int main(int argc, char** argv){
   struct audiotap_init_status status;
   struct tapenc_params params = {
@@ -81,10 +82,14 @@ int main(int argc, char** argv){
   uint8_t videotype = TAP_VIDEOTYPE_PAL;
 
   status = audiotap_initialize2();
-  if ((status.audiofile_init_status != LIBRARY_OK &&
-       status.portaudio_init_status != LIBRARY_OK)
-    || status.tapencoder_init_status != LIBRARY_OK){
-    printf("Failed to initialize audiotap library: both audiofile and pablio failed to load");
+  if (status.audiofile_init_status != LIBRARY_OK &&
+       status.portaudio_init_status != LIBRARY_OK){
+    printf("Failed to initialize audiotap library: both Audiofile and Portaudio failed to load");
+    exit(1);
+  }
+
+  if (status.tapencoder_init_status != LIBRARY_OK){
+    printf("Failed to initialize audiotap library: tapencoder failed to load");
     exit(1);
   }
   

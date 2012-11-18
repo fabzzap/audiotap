@@ -22,6 +22,7 @@
 #include "audiotap.h"
 #include "tap2audio_core.h"
 #include "audiotap_loop.h"
+#include "version.h"
 
 static void sig_int(int signum){
   audiotap_interrupt();
@@ -41,8 +42,8 @@ void help(){
 }
 
 void version(){
-  printf("tap2audio (part of Audiotap) version 1.5\n");
-  printf("(C) by Fabrizio Gennari, 2003-2008\n");
+  printf("tap2audio (part of Audiotap) version " AUDIOTAP_VERSION "\n");
+  printf("(C) by Fabrizio Gennari, 2003-2012\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
   printf("This product includes software developed by the NetBSD\n");
@@ -50,7 +51,7 @@ void version(){
 }
    
 int main(int argc, char** argv){
-  struct tapdec_params params = {254, 0, 0, AUDIOTAP_WAVE_SQUARE};
+  struct tapdec_params params = {254, 0, AUDIOTAP_WAVE_SQUARE};
   int freq = 44100;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
@@ -65,10 +66,14 @@ int main(int argc, char** argv){
   struct audiotap_init_status status;
 
   status = audiotap_initialize2();
-  if ((status.audiofile_init_status != LIBRARY_OK &&
-      status.portaudio_init_status != LIBRARY_OK)
-   || status.tapdecoder_init_status != LIBRARY_OK){
-    printf("Failed to initialize audiotap library: both audiofile and pablio failed to load");
+  if (status.audiofile_init_status != LIBRARY_OK &&
+      status.portaudio_init_status != LIBRARY_OK){
+    printf("Failed to initialize audiotap library: both Audiofile and Portaudio failed to load");
+    exit(1);
+  }
+
+  if (status.tapdecoder_init_status != LIBRARY_OK){
+    printf("Failed to initialize audiotap library: tapdecoder failed to load");
     exit(1);
   }
 
