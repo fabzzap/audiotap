@@ -13,9 +13,40 @@
  */
 
 #include "resource.h"
+#include "version.h"
+#include <windows.h>
 
-#include "winuser.h"
-#include "winnt.h"
+VS_VERSION_INFO		VERSIONINFO
+  FILEVERSION		AUDIOTAP_MAJOR,AUDIOTAP_MINOR,AUDIOTAP_REV,0
+  PRODUCTVERSION	AUDIOTAP_MAJOR,AUDIOTAP_MINOR,AUDIOTAP_REV,0
+  FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+  FILEFLAGS		VS_FF_DEBUG | VS_FF_PRERELEASE
+#else
+  FILEFLAGS		VS_FF_PRERELEASE
+#endif
+  FILEOS		VOS__WINDOWS32
+  FILETYPE		VFT_APP
+  FILESUBTYPE		0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Fabrizio Gennari\0"
+      VALUE "FileDescription", "Audiotap, a program to read and write Commodore tapes\0"
+      VALUE "FileVersion", AUDIOTAP_VERSION "\0"
+      VALUE "InternalName", "audiotap\0"
+      VALUE "OriginalFilename",	"audiotap.exe\0"
+      VALUE "ProductName",	"Audiotap\0"
+      VALUE "ProductVersion", AUDIOTAP_VERSION "\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0809, 1252
+  END
+END
 
 IDD_MAINWINDOW DIALOGEX 0, 0, 186, 146
 STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -93,8 +124,8 @@ CAPTION "About Audiotap"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,48,174,50,14
-    CTEXT           "Audiotap 1.6",IDC_STATIC,7,7,134,8
-    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2011",IDC_STATIC,8,18,133,8
+    CTEXT           "Audiotap 2.0",IDC_STATIC,7,7,134,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 2003-2012",IDC_STATIC,8,18,133,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",IDC_STATIC,7,28,134,21
     RTEXT           "portaudio.dll status",IDC_STATIC,5,54,67,19
     RTEXT           "audiofile.dll status",IDC_STATIC,5,84,67,19
