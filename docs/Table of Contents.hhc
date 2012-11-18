@@ -29,11 +29,11 @@
 			<param name="Local" value="license.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="License for audiotap.dll, tap.dll and audiofile.dll">
+			<param name="Name" value="License for audiotap.dll, tapencoder.dll, tapdecoder.dll and libaudiofile-1.dll">
 			<param name="Local" value="lesser_license.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="License for portaudio.dll and pablio.dll"">
+			<param name="Name" value="License for libportaudio-2.dll"">
 			<param name="Local" value="portaudio_license.htm">
 			</OBJECT>
 	</UL>
@@ -65,5 +65,9 @@
 			<param name="Local" value="2wav_tips.htm">
 			</OBJECT>
 	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Concatenating .TAP files">
+		<param name="Local" value="concat.htm">
+		</OBJECT>
 </UL>
 </BODY></HTML>

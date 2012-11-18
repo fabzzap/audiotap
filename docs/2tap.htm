@@ -10,27 +10,33 @@ Choose <i>Create a TAP file</i>
 <img src="2tap.png" alt="Create a TAP file">
 <p>
 <ul>
-<li>Choose <i>from an audio file (WAV or similar)</i> if you sampled the tape to a WAV
-file or another supported audio file format. This option is not available if the file
-<i>libaudiofile-0.dll</i> is missing from the directory where <i>audiotap.exe</i> is.
-<li>Choose <i>from a sound</i> if you want to record the sound right away. For this, you
-need to connect the output of a tape player to the sound card input.
+<li>Choose <i>from an audio file (WAV or similar)</i> if you sampled the tape
+to a WAV file or another supported audio file format. This option is not
+available if the file <i>libaudiofile-1.dll</i> is missing from the directory
+where <i>audiotap.exe</i> is.
+<li>Choose <i>from a sound</i> if you want to record the sound right away. For
+this, you need to connect the output of a tape player to the sound card input.
 This option is not available if the file
 <i>libportaudio-2.dll</i> is missing from the directory where
 <i>audiotap.exe</i> is.
 </ul>
-<b>Inverted waveform</b>: some sound cards invert the signal, that is they turn negative values of the
-waveform into positive ones and vice versa. If the input is such a sound card, or a .WAV
-file generated with such a sound card, invalid data will come from the tape and no programs
-will be converted. In these cases, check this box. In general, if the TAP file does not work,
-try toggling this box and start again.<br>This option is ignored if semiwaves are selected in
-the advanced options.<br>
+<b>Inverted waveform</b>: some sound cards invert the signal, that is they turn
+negative values of the waveform into positive ones and vice versa. If the input
+is such a sound card, or a .WAV file generated with such a sound card, invalid
+data will come from the tape and no programs will be converted. In these cases,
+check this box. In general, if the TAP file does not work, try toggling this box
+and start again.<br>
+
 <a href="2tap_adv.htm">Advanced options</a>
 <p>
-Then press OK. You will be asked to choose the input audio file (in case you choose
-conversion from an audio file) and the output TAP file (you will be able to choose whether
-to create a version 0 or version 1 TAP file). When you've chosen, the conversion starts.
-If the input is a sound, press play on the tape player and press <i>Cancel</i> when you want
-to stop. Otherwise, wait until the end, or press <i>Cancel</i> to stop immediately.
+Then press OK. You will be asked to choose the input audio file (in case you
+choose conversion from an audio file) and the output TAP file (you will also be
+able to choose the version of the TAP file, among 0, 1 or 2. Version 2 uses half
+waves and is recommended for C16 tapes. Version 1 is recommended for C64 and
+VIC20 tapes. Version 0 is old and not recommended). When you've chosen, the
+conversion starts. If the input is a sound, press play on the tape player and
+press <i>Cancel</i> when you want to stop. Otherwise, wait until the end, or
+press <i>Cancel</i> to stop immediately.
+
 </BODY>
 </HTML>

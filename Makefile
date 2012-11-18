@@ -44,5 +44,7 @@ ifdef USE_RPATH
   endif
 endif
 
-docs\audiotap.chm: docs\audiotap-doc.hhp docs\2tap.htm docs\2tap_adv.htm docs\2tap_tips.htm docs\2wav.htm docs\2wav_adv.htm docs\2wav_tips.htm docs\contacts.htm docs\credits.htm docs\intro.htm docs\lesser_license.htm docs\license.htm docs\main.htm docs\portaudio_license.htm docs\2tap.png docs\2wav.png docs\optimal_rec.png docs\play_volume.png docs\rec_volume.png docs\sinusoid.png docs\too_loud.png
-	hhc $<
+HHC=hhc
+
+docs\audiotap.chm: docs\audiotap-doc.hhp docs\2tap.htm docs\2tap_adv.htm docs\2tap_tips.htm docs\2wav.htm docs\2wav_adv.htm docs\2wav_tips.htm docs\concat.htm docs\contacts.htm docs\credits.htm docs\intro.htm docs\lesser_license.htm docs\license.htm docs\main.htm docs\portaudio_license.htm docs\2tap.png docs\2wav.png docs\optimal_rec.png docs\play_volume.png docs\rec_volume.png docs\sinusoid.png docs\too_loud.png
+	$(HHC) $<
