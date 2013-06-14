@@ -37,8 +37,7 @@ static void update_status(struct audiotap *audiotap_in){
 unsigned int audiotap_loop(struct audiotap *audiotap_in
                           ,struct audiotap *audiotap_out
                           ,struct audiotap *interruptible
-                          ,uint8_t close_output_file_at_end,
-                          uint8_t *problems_occurred){
+                          ,uint8_t *problems_occurred){
   enum audiotap_status status = AUDIOTAP_OK;
   unsigned int datalen = 0;
   int totlen;
@@ -79,9 +78,6 @@ unsigned int audiotap_loop(struct audiotap *audiotap_in
       *problems_occurred = 1;
   }
   audiotap_interruptible = NULL;
-  if (close_output_file_at_end)
-    tap2audio_close(audiotap_out);
-  audio2tap_close(audiotap_in);
   return datalen;
 }
 

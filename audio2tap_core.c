@@ -31,26 +31,12 @@ void audio2tap(char **infiles,
 {
   struct audiotap *audiotap_in, *audiotap_out = NULL;
   uint8_t halfwaves = 1;
-  uint8_t doing_audio = 0;
   int currentinfile = 0;
-  uint8_t this_is_the_last_input_file;
-  uint8_t retval;
+  uint8_t retval = 0;
 
   if (tap_version > 2){
     error_message("TAP version %u is unsupported", tap_version);
     return;
-  }
-
-  if (numinfiles == 0){
-    if (audio2tap_from_soundcard4(&audiotap_in,
-                                  freq,
-                                  params,
-                                  machine,
-                                  videotype) != AUDIOTAP_OK){
-      error_message("Sound card cannot be opened");
-      return;
-    }
-    doing_audio = 1;
   }
 
   do{
@@ -58,9 +44,8 @@ void audio2tap(char **infiles,
     uint8_t in_videotype = videotype;
     unsigned int datalen;
 
-    if (!doing_audio){
+    if (numinfiles != 0){
       char *input_file = infiles[currentinfile++];
-      this_is_the_last_input_file = (currentinfile == numinfiles);
       if (audio2tap_open_from_file3(&audiotap_in,
                                     input_file,
                                     params,
@@ -68,28 +53,37 @@ void audio2tap(char **infiles,
                                     &in_videotype,
                                     &halfwaves) != AUDIOTAP_OK){
         error_message("File %s does not exist, is not a supported audio file, or cannot be opened for some reasons", input_file);
-        if (this_is_the_last_input_file && audiotap_out != NULL)
-          tap2audio_close(audiotap_out);
         continue;
       }
       update_input_filename(input_file);
     }
-    else
-      this_is_the_last_input_file = 1;
+    else if (audio2tap_from_soundcard4(&audiotap_in,
+                                  freq,
+                                  params,
+                                  machine,
+                                  videotype) != AUDIOTAP_OK){
+      error_message("Sound card cannot be opened");
+      continue;
+    }
 
     if (audiotap_out == NULL && tap2audio_open_to_tapfile3(&audiotap_out,
                                                             outfile, tap_version,
                                                             machine,
                                                             videotype) != AUDIOTAP_OK){
       error_message("Cannot open file %s for writing", outfile);
-      audio2tap_close(audiotap_in);
-      return;
+      audiotap_out = NULL;
+      retval = -1;
     }
 
-    tap2audio_enable_halfwaves(audiotap_out, halfwaves && tap_version == 2);
-    audio2tap_enable_disable_halfwaves(audiotap_in, halfwaves && tap_version == 2);
-    datalen = audiotap_loop(audiotap_in, audiotap_out, audiotap_in, this_is_the_last_input_file, &retval);
-    if (halfwaves && tap_version == 2 && (datalen % 2) != 0)
-      tap2audio_set_pulse(audiotap_out, 256);
-  } while(!this_is_the_last_input_file && retval == 0);
+    if (audiotap_out != NULL){
+      tap2audio_enable_halfwaves(audiotap_out, halfwaves && tap_version == 2);
+      audio2tap_enable_disable_halfwaves(audiotap_in, halfwaves && tap_version == 2);
+      datalen = audiotap_loop(audiotap_in, audiotap_out, audiotap_in, &retval);
+      if (halfwaves && tap_version == 2 && (datalen % 2) != 0)
+        tap2audio_set_pulse(audiotap_out, 256);
+    }
+    audio2tap_close(audiotap_in);
+  } while(currentinfile != numinfiles && retval == 0);
+  if (audiotap_out != NULL)
+    tap2audio_close(audiotap_out);
 }

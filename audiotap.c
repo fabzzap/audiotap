@@ -250,14 +250,14 @@ LPARAM lParam
 
  ){
   if (uiMsg == WM_INITDIALOG){
-    struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(GetParent(GetParent(hdlg)), GWL_USERDATA);
+    struct audiotap_advanced *adv = (struct audiotap_advanced *)((LPOPENFILENAME)lParam)->lCustData;
     SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 0");
     SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 1");
     SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0, (LPARAM)"Version 2");
     SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_SETCURSEL, (WPARAM)adv->tap_version, 0);
   }
   if (uiMsg == WM_NOTIFY){
-    OFNOTIFY *notify = (OFNOTIFY *)lParam;
+    LPOFNOTIFY notify = (LPOFNOTIFY)lParam;
     if (notify->hdr.code == CDN_TYPECHANGE){
       switch(notify->lpOFN->nFilterIndex){
       case 1:
@@ -271,8 +271,8 @@ LPARAM lParam
     }
     if (notify->hdr.code == CDN_FILEOK){
       HWND main_window = GetParent(GetParent(hdlg));
-      struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(main_window, GWL_USERDATA);
-      if (adv != NULL && adv->tap_version != 2){
+      struct audiotap_advanced *adv = (struct audiotap_advanced *)notify->lpOFN->lCustData;
+      if (adv != NULL){
         LRESULT tap_result = SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_GETCURSEL, 0, 0);
         adv->tap_version = (tap_result >= 0 && tap_result <= 2) ? (uint8_t)tap_result : 1;
       }
@@ -345,6 +345,7 @@ void real_save_to_tap(HWND parent, struct audiotap_advanced *adv)
   file.hInstance = instance;
   file.lpfnHook = tap_save_hook_proc;
   file.lpstrDefExt = "tap";
+  file.lCustData = (LPARAM)adv;
   if (GetSaveFileNameA(&file) == TRUE){
     output_filename_base = adv->output_filename + file.nFileOffset;
 

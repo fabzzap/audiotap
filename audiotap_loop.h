@@ -20,5 +20,4 @@ void audiotap_interrupt();
 unsigned int audiotap_loop(struct audiotap *audiotap_in
                           ,struct audiotap *audiotap_out
                           ,struct audiotap *interruptible
-                          ,uint8_t close_output_file_at_end,
-                           uint8_t *problems_occurred);
+                          ,uint8_t *problems_occurred);
