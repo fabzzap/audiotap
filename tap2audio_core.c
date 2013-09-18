@@ -39,20 +39,22 @@ void tap2audio(char *infile,
   if (outfile && strlen(outfile)){
     if (tap2audio_open_to_wavfile4(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
-      audio2tap_close(audiotap_in);
-      return;
+      audiotap_out = NULL;
     }
   }
-  else if(tap2audio_open_to_soundcard4(&audiotap_out, params, freq, machine, videotype)){
+  else if(tap2audio_open_to_soundcard4(&audiotap_out, params, freq, machine, videotype) != AUDIOTAP_OK){
     error_message("Sound card cannot be opened", infile);
-    audio2tap_close(audiotap_in);
-    return;
+    audiotap_out = NULL;
   }
-  if (halfwaves){
-    tap2audio_enable_halfwaves(audiotap_out, 1);
-    audio2tap_enable_disable_halfwaves(audiotap_in, 1);
-  }
+  if(audiotap_out != NULL){
+    if (halfwaves){
+      tap2audio_enable_halfwaves(audiotap_out, 1);
+      audio2tap_enable_disable_halfwaves(audiotap_in, 1);
+    }
 
-  audiotap_loop(audiotap_in, audiotap_out, audiotap_out, 1, NULL);
+    audiotap_loop(audiotap_in, audiotap_out, audiotap_out, NULL);
+    tap2audio_close(audiotap_out);
+  }
+  audio2tap_close(audiotap_in);
 }
 
