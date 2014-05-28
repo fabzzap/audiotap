@@ -16,13 +16,13 @@
  * Copyright (C) 2001, 2002 Free Software Foundation, Inc.
  */
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <libgen.h>
 #ifndef WIN32
 #include <sys/ioctl.h>
 #include <termios.h>
@@ -52,8 +52,10 @@ void error_message(const char *format,...){
 
 void update_input_filename(const char *input_filename)
 {
-  char *base = basename(input_filename);
+  char* input_filename_as_char = strdup(input_filename);
+  char *base = basename(input_filename_as_char);
   printf("Converting %s\n",base);
+  free(input_filename_as_char);
 }
 
 /* "Thermometer" (bar) progress. */
