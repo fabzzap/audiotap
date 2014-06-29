@@ -28,9 +28,9 @@ void audiotap_interrupt(){
 static void update_status(struct audiotap *audiotap_in){
  int currlen, currloudness;
  currlen = audio2tap_get_current_pos(audiotap_in);
- if (currlen != -1)
+ if (currlen >= 0)
    statusbar_update(currlen + 1);
- else if ( (currloudness=audio2tap_get_current_sound_level(audiotap_in)) != -1)
+ else if ( (currloudness=audio2tap_get_current_sound_level(audiotap_in)) >= 0)
    statusbar_update(currloudness);
 }
 
