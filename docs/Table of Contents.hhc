@@ -33,8 +33,12 @@
 			<param name="Local" value="lesser_license.htm">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="License for libportaudio-2.dll"">
+			<param name="Name" value="License for libportaudio-2.dll">
 			<param name="Local" value="portaudio_license.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="License for FLAC (statically linked to libaudiofile-1.dll)">
+			<param name="Local" value="COPYING.Xiph.html">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
