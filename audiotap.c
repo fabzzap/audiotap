@@ -164,6 +164,7 @@ LPARAM lParam // second message parameter
 struct audiotap_advanced {
   char **input_filenames;
   int num_input_filenames;
+  char to_audio;
   char input_filename[1024];
   char output_filename[1024];
   uint32_t freq;
@@ -467,6 +468,7 @@ LPARAM lParam
 DWORD WINAPI tap2audio_thread(LPVOID params){
   tap2audio(((struct audiotap_advanced*)params)->input_filename,
     ((struct audiotap_advanced*)params)->output_filename,
+    ((struct audiotap_advanced*)params)->to_audio,
     &((struct audiotap_advanced*)params)->tapdec_params,
     ((struct audiotap_advanced*)params)->freq);
   return 0;
@@ -484,6 +486,7 @@ void read_from_tap(HWND hwnd){
 
   adv->input_filename[0]=0;
   adv->output_filename[0]=0;
+  adv->to_audio=1;
   memset(&file,0,sizeof(file));
   file.lStructSize = sizeof(file);
   file.hwndOwner = hwnd;
@@ -512,6 +515,7 @@ void read_from_tap(HWND hwnd){
     if (GetSaveFileNameA(&file) == FALSE)
       return;
     output_filename_base = adv->output_filename + file.nFileOffset;
+    adv->to_audio=0;
   }
 
   status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,tap2audio_status_window_proc);
@@ -830,7 +834,7 @@ LPARAM lParam // second message parameter
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       LPSTR lpCmdLine, int nCmdShow ){
-  struct audiotap_advanced adv = {NULL, 0, "", "", 44100,
+  struct audiotap_advanced adv = {NULL, 0, 0, "", "", 44100,
     TAP_MACHINE_C64,TAP_VIDEOTYPE_PAL,1,
     {0,12,20,0},
     {254,0,AUDIOTAP_WAVE_SQUARE}

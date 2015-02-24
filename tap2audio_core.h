@@ -16,8 +16,8 @@
 
 struct tapdec_params;
 
-void tap2audio(char *infile,
-	      char *outfile,
-	      struct tapdec_params *params,
-	      uint32_t freq);
-
+void tap2audio(const char *infile,
+               const char *outfile,
+               char output_to_audio,
+               struct tapdec_params *params,
+               uint32_t freq);

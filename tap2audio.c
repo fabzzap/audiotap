@@ -53,6 +53,8 @@ void version(){
 int main(int argc, char** argv){
   struct tapdec_params params = {254, 0, AUDIOTAP_WAVE_SQUARE};
   int freq = 44100;
+  char to_audio;
+  const char *outfile;
   struct option cmdline[]={
     {"volume"            ,1,NULL,'v'},
     {"frequency"         ,1,NULL,'f'},
@@ -134,17 +136,23 @@ int main(int argc, char** argv){
       printf("Cannot read from sound card: pablio library missing or invalid\n");
       exit(1);
     }
+    outfile = NULL;
+    to_audio = 1;
   }
   else{
     if (status.audiofile_init_status != LIBRARY_OK){
       printf("Cannot read from file: audiofile library missing or invalid\n");
       exit(1);
     }
+    outfile = argv[1];
+    if (!strcmp(outfile, "-"))
+      outfile = NULL;
+    to_audio = 0;
   }
 
   signal(SIGINT, sig_int);
 
-  tap2audio(argv[0], argv[1], &params, freq);
+  tap2audio(argv[0], outfile, to_audio, &params, freq);
   exit(0);
 }
 

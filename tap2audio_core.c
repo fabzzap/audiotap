@@ -19,10 +19,11 @@
 #include <stddef.h>
 #include <string.h>
 
-void tap2audio(char *infile,
-	       char *outfile,
-	       struct tapdec_params *params,
-	       uint32_t freq)
+void tap2audio(const char *infile,
+               const char *outfile,
+               char output_to_audio,
+               struct tapdec_params *params,
+               uint32_t freq)
 {
   uint8_t machine, videotype, halfwaves;
   struct audiotap *audiotap_in, *audiotap_out;
@@ -36,7 +37,7 @@ void tap2audio(char *infile,
     error_message("File %s cannot be opened for reading", infile);
     return;
   }
-  if (outfile && strlen(outfile)){
+  if (!output_to_audio){
     if (tap2audio_open_to_wavfile4(&audiotap_out, outfile, params, freq, machine, videotype) != AUDIOTAP_OK){
       error_message("File %s cannot be opened", infile);
       audiotap_out = NULL;
