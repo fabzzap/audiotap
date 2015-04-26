@@ -1,7 +1,7 @@
 /* Audiotap: a program for playing TAP files or converting them to WAV files,
  * and to convert C64 tapes to TAP files
  *
- * Copyright (c) Fabrizio Gennari, 2003
+ * Copyright (c) Fabrizio Gennari, 2003-2015
  *
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
@@ -69,16 +69,17 @@ BEGIN
     PUSHBUTTON      "About",IDC_ABOUT,7,126,45,13
 END
 
-IDD_STATUS DIALOG  0, 0, 186, 95
+IDD_STATUS DIALOGEX 0, 0, 186, 95
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Audiotap progress status"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Cancel",IDC_STOP,70,74,50,14
+    PUSHBUTTON      "Cancel",IDC_STOP,70,70,46,18
     LTEXT           "Origin",IDC_ORIGIN,7,17,172,11
     LTEXT           "Destination",IDC_DESTINATION,7,29,172,9
     LTEXT           "Progress indication",IDC_WHAT_PROGRESSBAR_MEANS,7,45,60,8
     CONTROL         "Progress1",IDC_PROGRESSBAR,"msctls_progress32",0x0,7,57,172,10
+    PUSHBUTTON      "Button1",IDC_PLAYPAUSE,7,70,18,18,BS_BITMAP | NOT WS_VISIBLE
 END
 
 IDD_TO_TAP_ADVANCED DIALOGEX 0, 0, 163, 154
@@ -146,3 +147,7 @@ BEGIN
 END
 
 IDI_ICON                ICON                    "audiotap.ico"
+
+IDB_STOP                BITMAP                  "stop.bmp"
+IDB_PLAY                BITMAP                  "play.bmp"
+IDB_PAUSE               BITMAP                  "pause.bmp"

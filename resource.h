@@ -20,6 +20,9 @@
 #define IDD_FROM_TAP_ADVANCED           105
 #define IDD_ABOUT                       106
 #define IDI_ICON                        107
+#define IDB_STOP                        201
+#define IDB_PAUSE                       202
+#define IDB_PLAY                        203
 #define IDC_FROM_TAP                    1000
 #define IDC_TO_TAP                      1001
 #define IDC_TO_SOUND                    1002
@@ -51,4 +54,5 @@
 #define IDC_WAVEFORM                    1028
 #define IDC_VIDEOTYPE_PAL               1029
 #define IDC_VIDEOTYPE_NTSC              1030
+#define IDC_PLAYPAUSE                   1031
 #define IDC_STATIC                      -1

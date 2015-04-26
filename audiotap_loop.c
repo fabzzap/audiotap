@@ -25,6 +25,16 @@ void audiotap_interrupt(){
     audiotap_terminate(audiotap_interruptible);
 }
 
+void audiotap_pause(){
+  if (audiotap_interruptible)
+    tap2audio_pause(audiotap_interruptible);
+}
+
+void audiotap_resume(){
+  if (audiotap_interruptible)
+    tap2audio_resume(audiotap_interruptible);
+}
+
 static void update_status(struct audiotap *audiotap_in){
  int currlen, currloudness;
  currlen = audio2tap_get_current_pos(audiotap_in);

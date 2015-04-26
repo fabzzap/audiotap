@@ -441,6 +441,12 @@ void save_to_tap(HWND hwnd){
   real_save_to_tap(hwnd, adv);
 }
 
+struct play_pause_icon {
+  BOOL pause;
+  HBITMAP play_icon;
+  HBITMAP pause_icon;
+};
+
 INT_PTR CALLBACK tap2audio_status_window_proc( HWND hwndDlg,
  // handle to dialog box
 
@@ -457,9 +463,23 @@ LPARAM lParam
   switch (uMsg)
   {
   case WM_COMMAND:
-    if (LOWORD(wParam) == IDC_STOP)
+    if (LOWORD(wParam) == IDC_STOP) {
       audiotap_interrupt();
-    return 1;
+      return 1;
+    }
+    if (LOWORD(wParam) == IDC_PLAYPAUSE) {
+      struct play_pause_icon *icon = (struct play_pause_icon *)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+      if (icon->pause){
+        audiotap_resume();
+        SendDlgItemMessage(hwndDlg, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon->pause_icon);
+      }
+      else {
+        audiotap_pause();
+        SendDlgItemMessage(hwndDlg, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon->play_icon);
+      }
+      icon->pause = !icon->pause;
+      return 1;
+    }
   default:
     return 0;
   }
@@ -481,8 +501,10 @@ void read_from_tap(HWND hwnd){
   DWORD thread_id;
   HANDLE thread;
   char msg_string[128];
-  struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWL_USERDATA);
+  struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWLP_USERDATA);
   char input_filename[1024];
+  struct play_pause_icon icon = { FALSE };
+  HBITMAP stop_icon;
 
   adv->input_filename[0]=0;
   adv->output_filename[0]=0;
@@ -519,6 +541,33 @@ void read_from_tap(HWND hwnd){
   }
 
   status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,tap2audio_status_window_proc);
+  SetWindowLongPtr(status_window, GWLP_USERDATA, (LONG_PTR)&icon);
+  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)){
+    HWND stop_button = GetDlgItem(status_window, IDC_STOP);
+    RECT window_rect, play_pause_button_rect;
+    stop_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_STOP));
+    icon.play_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_PLAY));
+    icon.pause_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_PAUSE));
+    /* make sure the pause button is visible and shows the pause icon*/
+    SendDlgItemMessage(status_window, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon.pause_icon);
+    ShowWindow(GetDlgItem(status_window, IDC_PLAYPAUSE), SW_SHOW);
+    /* get width of window */
+    GetClientRect(status_window, &window_rect);
+    /* get absolute position of play-pause button */
+    GetWindowRect(GetDlgItem(status_window, IDC_PLAYPAUSE), &play_pause_button_rect);
+    /* get position of play-pause button within window */
+    MapWindowPoints(NULL, status_window, (LPPOINT)&play_pause_button_rect, 2);
+    /* make stop button as big as play-pause button, top-aligned and symmetrically placed */
+    MoveWindow(stop_button,
+      window_rect.right - play_pause_button_rect.right,
+      play_pause_button_rect.top,
+      play_pause_button_rect.right - play_pause_button_rect.left,
+      play_pause_button_rect.bottom - play_pause_button_rect.top,
+      TRUE);
+    /* make sure the stop button shows the stop icon instead of the word Cancel*/
+    SetWindowLongPtr(stop_button, GWL_STYLE, GetWindowLongPtr(stop_button, GWL_STYLE) | BS_BITMAP);
+    SendDlgItemMessage(status_window, IDC_STOP, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)stop_icon);
+  }
   EnableWindow(hwnd, FALSE);
   ShowWindow(status_window, SW_SHOWNORMAL);
   UpdateWindow(status_window);
@@ -544,6 +593,11 @@ void read_from_tap(HWND hwnd){
   EnableWindow(hwnd, TRUE);
   DestroyWindow(status_window);
   status_window = NULL;
+  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)){
+    DeleteObject(icon.play_icon);
+    DeleteObject(icon.pause_icon);
+    DeleteObject(stop_icon);
+  }
 }
 
 INT_PTR CALLBACK to_tap_advanced_proc(HWND hwnd, // handle of window
