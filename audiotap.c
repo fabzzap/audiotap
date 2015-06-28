@@ -465,6 +465,7 @@ LPARAM lParam
   case WM_COMMAND:
     if (LOWORD(wParam) == IDC_STOP) {
       audiotap_interrupt();
+      audiotap_resume();
       return 1;
     }
     if (LOWORD(wParam) == IDC_PLAYPAUSE) {
