@@ -28,6 +28,31 @@ static void sig_int(int signum){
   audiotap_interrupt();
 }
 
+#ifdef SIGUSR1
+#include <semaphore.h>
+#include <errno.h>
+
+static sem_t sem;
+
+static void sig_pause(int signum){
+  int semr;
+  sigset_t set;
+
+  audiotap_pause();
+  sigemptyset(&set);
+  sigaddset (&set, SIGUSR2);
+  sigprocmask(SIG_UNBLOCK,&set,NULL);
+  do {
+    semr = sem_wait(&sem);
+  } while (semr == -1 && errno == EINTR);
+}
+
+static void sig_resume(int signum){
+  audiotap_resume();
+  sem_post(&sem);
+}
+#endif
+
 void help(){
   printf("Usage: tap2audio -h|-V\n");
   printf("       tap2audio [-f <freq>] [-v vol] [-i] <input TAP file> [output WAV file]\n");
@@ -66,6 +91,11 @@ int main(int argc, char** argv){
   };
   int option;
   struct audiotap_init_status status;
+  struct sigaction interrupt_action;
+#ifdef SIGUSR1
+  struct sigaction pause_action, resume_action;
+  sigset_t set;
+#endif
 
   status = audiotap_initialize2();
   if (status.audiofile_init_status != LIBRARY_OK &&
@@ -150,9 +180,25 @@ int main(int argc, char** argv){
     to_audio = 0;
   }
 
-  signal(SIGINT, sig_int);
+  interrupt_action.sa_handler = sig_int;
+  sigaction(SIGINT, &interrupt_action, NULL);
+#ifdef SIGUSR1
+  sem_init(&sem, 0, 0);
+  sigemptyset(&set);
+  sigaddset (&set, SIGUSR2);
+  sigprocmask(SIG_BLOCK,&set,NULL);
+  memset(&pause_action, 0, sizeof(pause_action));
+  memset(&resume_action, 0, sizeof(resume_action));
+  pause_action.sa_handler = sig_pause;
+  resume_action.sa_handler = sig_resume;
+  sigaction(SIGUSR1, &pause_action, NULL);
+  sigaction(SIGUSR2, &resume_action, NULL);
+#endif
 
   tap2audio(argv[0], outfile, to_audio, &params, freq);
+#ifdef SIGUSR1
+  sem_destroy(&sem);
+#endif
   exit(0);
 }
 

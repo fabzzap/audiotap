@@ -33,6 +33,7 @@ audio2tap tap2audio audiotap: audiotap_loop.o
 audio2tap tap2audio audiotap: LDLIBS+=-laudiotap
 audiotap: LDFLAGS+=-mwindows
 audiotap: LDLIBS+=-lcomdlg32
+tap2audio: LDLIBS+=-pthread
 
 ifdef AUDIOTAP_LIB
   LDLIBS+=-L$(AUDIOTAP_LIB)
