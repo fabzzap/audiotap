@@ -28,7 +28,7 @@ static void sig_int(int signum){
   audiotap_interrupt();
 }
 
-#ifdef SIGUSR1
+#ifdef ENABLE_PAUSE
 #include <semaphore.h>
 #include <errno.h>
 
@@ -91,8 +91,7 @@ int main(int argc, char** argv){
   };
   int option;
   struct audiotap_init_status status;
-  struct sigaction interrupt_action;
-#ifdef SIGUSR1
+#ifdef ENABLE_PAUSE
   struct sigaction pause_action, resume_action;
   sigset_t set;
 #endif
@@ -180,9 +179,8 @@ int main(int argc, char** argv){
     to_audio = 0;
   }
 
-  interrupt_action.sa_handler = sig_int;
-  sigaction(SIGINT, &interrupt_action, NULL);
-#ifdef SIGUSR1
+  signal(SIGINT, sig_int);
+#ifdef ENABLE_PAUSE
   sem_init(&sem, 0, 0);
   sigemptyset(&set);
   sigaddset (&set, SIGUSR2);
@@ -196,7 +194,7 @@ int main(int argc, char** argv){
 #endif
 
   tap2audio(argv[0], outfile, to_audio, &params, freq);
-#ifdef SIGUSR1
+#ifdef ENABLE_PAUSE
   sem_destroy(&sem);
 #endif
   exit(0);
