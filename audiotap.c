@@ -163,7 +163,7 @@ LPARAM lParam // second message parameter
 
 struct audiotap_advanced {
   char **input_filenames;
-  int num_input_filenames;
+  unsigned int num_input_filenames;
   char to_audio;
   char input_filename[1024];
   char output_filename[1024];
@@ -299,7 +299,6 @@ static void get_basename(const char *filename, char *output_name, int outlen)
 #ifdef _MSC_VER
   char fname[_MAX_FNAME];
   char ext[_MAX_EXT];
-  char *dest;
 
   _splitpath(filename, NULL, NULL, fname, ext);
   strncpy(output_name, fname, outlen);
@@ -328,7 +327,7 @@ void real_save_to_tap(HWND parent, struct audiotap_advanced *adv)
   HWND control;
   OPENFILENAMEA file;
   char *output_filename_base;
-  int i;
+  unsigned int i;
 
   adv->output_filename[0]=0;
   memset(&file,0,sizeof(file));
@@ -503,7 +502,6 @@ void read_from_tap(HWND hwnd){
   HANDLE thread;
   char msg_string[128];
   struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWLP_USERDATA);
-  char input_filename[1024];
   struct play_pause_icon icon = { FALSE };
   HBITMAP stop_icon;
 

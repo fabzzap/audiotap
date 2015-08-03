@@ -18,7 +18,7 @@
 struct tapenc_params;
 
 void audio2tap(char **infiles,
-               int numinfiles,
+               unsigned int numinfiles,
                char *outfile,
                uint32_t freq,
                struct tapenc_params *params,

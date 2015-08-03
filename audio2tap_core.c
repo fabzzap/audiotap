@@ -20,7 +20,7 @@
 #include "audiotap.h"
 
 void audio2tap(char **infiles,
-               int numinfiles,
+               unsigned int numinfiles,
                char *outfile,
                uint32_t freq,
                struct tapenc_params *params,
@@ -31,7 +31,7 @@ void audio2tap(char **infiles,
 {
   struct audiotap *audiotap_in, *audiotap_out = NULL;
   uint8_t halfwaves = 1;
-  int currentinfile = 0;
+  unsigned int currentinfile = 0;
   uint8_t retval = 0;
 
   if (tap_version > 2){
