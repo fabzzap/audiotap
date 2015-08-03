@@ -34,6 +34,11 @@ audio2tap tap2audio audiotap: LDLIBS+=-laudiotap
 audiotap: LDFLAGS+=-mwindows
 audiotap: LDLIBS+=-lcomdlg32
 
+ifdef ENABLE_PAUSE
+  tap2audio: CFLAGS+=-DENABLE_PAUSE
+  tap2audio: LDLIBS+=-pthread
+endif
+
 ifdef AUDIOTAP_LIB
   LDLIBS+=-L$(AUDIOTAP_LIB)
 endif
