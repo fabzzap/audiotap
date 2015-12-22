@@ -504,6 +504,7 @@ void read_from_tap(HWND hwnd){
   struct audiotap_advanced *adv = (struct audiotap_advanced *)GetWindowLong(hwnd, GWLP_USERDATA);
   struct play_pause_icon icon = { FALSE };
   HBITMAP stop_icon;
+  BOOL is_to_sound;
 
   adv->input_filename[0]=0;
   adv->output_filename[0]=0;
@@ -541,7 +542,8 @@ void read_from_tap(HWND hwnd){
 
   status_window=CreateDialog(instance,MAKEINTRESOURCE(IDD_STATUS),hwnd,tap2audio_status_window_proc);
   SetWindowLongPtr(status_window, GWLP_USERDATA, (LONG_PTR)&icon);
-  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)){
+  is_to_sound = IsDlgButtonChecked(hwnd, IDC_TO_SOUND);
+  if (is_to_sound) {
     HWND stop_button = GetDlgItem(status_window, IDC_STOP);
     RECT window_rect, play_pause_button_rect;
     stop_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_STOP));
@@ -566,6 +568,9 @@ void read_from_tap(HWND hwnd){
     /* make sure the stop button shows the stop icon instead of the word Cancel*/
     SetWindowLongPtr(stop_button, GWL_STYLE, GetWindowLongPtr(stop_button, GWL_STYLE) | BS_BITMAP);
     SendDlgItemMessage(status_window, IDC_STOP, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)stop_icon);
+    LONG_PTR stile = GetWindowLongPtr(GetDlgItem(status_window, IDC_PLAYPAUSE), GWL_STYLE);
+    stile |= WS_TABSTOP;
+    SetWindowLongPtr(GetDlgItem(status_window, IDC_PLAYPAUSE), GWL_STYLE, stile);
   }
   EnableWindow(hwnd, FALSE);
   ShowWindow(status_window, SW_SHOWNORMAL);
@@ -584,6 +589,12 @@ void read_from_tap(HWND hwnd){
   while(MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT) != WAIT_OBJECT_0){
     while (PeekMessage (&msg, 0, 0, 0, PM_REMOVE))
     {
+      if (is_to_sound && msg.message == WM_KEYDOWN) {
+        if (msg.wParam == VK_MEDIA_PLAY_PAUSE)
+          PostMessage (status_window, WM_COMMAND, IDC_PLAYPAUSE, 0);
+        else if (msg.wParam == VK_MEDIA_STOP)
+          PostMessage (status_window, WM_COMMAND, IDC_STOP, 0);
+      }
       TranslateMessage (&msg);
       DispatchMessage (&msg);
     }
