@@ -1,6 +1,6 @@
 #define AUDIOTAP_MAJOR 2
 #define AUDIOTAP_MINOR 2
-#define AUDIOTAP_REV 0
+#define AUDIOTAP_REV 1
 
 #define STR(x) #x
 #define MACROSTR(x) STR(x)
