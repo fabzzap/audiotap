@@ -93,7 +93,7 @@ int main(int argc, char** argv){
     exit(1);
   }
   
-  while( (option=getopt_long(argc,argv,"d:H:0ihVc:nw:t:",cmdline,NULL)) != -1){
+  while( (option=getopt_long(argc,argv,"d:H:0ihVc:nf:t:",cmdline,NULL)) != -1){
     switch(option){
     case 'c':
       if(!strcmp(optarg,"c64"))
