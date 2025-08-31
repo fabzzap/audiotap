@@ -25,7 +25,7 @@
 #include <libgen.h>
 #ifndef WIN32
 #include <sys/ioctl.h>
-#include <termios.h>
+#include <unistd.h>
 #else
 #include <windows.h>
 #endif
